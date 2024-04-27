@@ -1,0 +1,30 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+group = 'ro.srth.lbv2'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+jar{
+    manifest{
+        attributes('Main-Class': 'ro.srth.lbv2.Bot')
+    }
+}
+
+dependencies {
+    implementation("net.dv8tion:JDA:5.0.0-beta.22")
+    implementation('ch.qos.logback:logback-classic:1.4.14')
+    implementation platform('io.projectreactor:reactor-bom:2023.0.5')
+    implementation('io.projectreactor:reactor-core')
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+    implementation("org.json:json:20240303")
+}
+
+shadowJar {
+    exclude("ro/srth/lbv2/JSONGenerator")
+}
