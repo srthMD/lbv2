@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7c634323-68ee-4db4-baf2-ec0aa8b139d3" name="Changes" comment="Change .gitIgnore" />
+    <list default="true" id="7c634323-68ee-4db4-baf2-ec0aa8b139d3" name="Changes" comment="Merge remote-tracking branch 'origin/master'">
+      <change afterPath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/command/slash/AsciifyCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/Bot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/Bot.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/JSONGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/JSONGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/command/CommandManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/command/CommandManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/command/LBCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/command/LBCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ro/srth/lbv2/command/slash/TestCommand.java" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -59,14 +70,12 @@
     &quot;assignee&quot;: &quot;srthMD&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">
-    <option name="selectedUrlAndAccountId">
-      <UrlAndAccount>
-        <option name="accountId" value="5ca394b4-e2de-4839-825b-fabe2a0ab164" />
-        <option name="url" value="https://github.com/srthMD/lbv2.git" />
-      </UrlAndAccount>
-    </option>
-  </component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/srthMD/lbv2.git&quot;,
+    &quot;accountId&quot;: &quot;5ca394b4-e2de-4839-825b-fabe2a0ab164&quot;
+  }
+}</component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
   </component>
@@ -87,6 +96,7 @@
     &quot;Gradle.lbv2 [shadowJar].executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;jdk.selected.JAVA_MODULE&quot;: &quot;temurin-20&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
@@ -99,7 +109,7 @@
       <recent name="C:\Users\SRTH_\Desktop\lbv2\build\libs\cmds" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.JSONGenerator">
+  <component name="RunManager" selected="Gradle.lbv2 [shadowJar]">
     <configuration name="Bot" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="ro.srth.lbv2.Bot" />
       <module name="lbv2.main" />
@@ -149,8 +159,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Application.JSONGenerator" />
       <item itemvalue="Application.Bot" />
+      <item itemvalue="Application.JSONGenerator" />
       <item itemvalue="Gradle.lbv2 [shadowJar]" />
     </list>
     <recent_temporary>
@@ -159,13 +169,6 @@
         <item itemvalue="Application.Bot" />
       </list>
     </recent_temporary>
-  </component>
-  <component name="SharedIndexes">
-    <attachedChunks>
-      <set>
-        <option value="jdk-20.0.2-temurin-20.0.2-4caba194b151-b0be1f17" />
-      </set>
-    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -192,12 +195,37 @@
       <option name="project" value="LOCAL" />
       <updated>1714186317670</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Merge remote-tracking branch 'origin/master'">
+      <option name="closed" value="true" />
+      <created>1714186434631</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1714186434631</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Merge remote-tracking branch 'origin/master'">
+      <option name="closed" value="true" />
+      <created>1714186453436</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1714186453436</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Merge remote-tracking branch 'origin/master'">
+      <option name="closed" value="true" />
+      <created>1714186482232</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1714186482232</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Initial Commit" />
     <MESSAGE value="Change .gitIgnore" />
-    <option name="LAST_COMMIT_MESSAGE" value="Change .gitIgnore" />
+    <MESSAGE value="Merge remote-tracking branch 'origin/master'" />
+    <option name="LAST_COMMIT_MESSAGE" value="Merge remote-tracking branch 'origin/master'" />
   </component>
 </project>

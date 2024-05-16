@@ -3,6 +3,7 @@ package ro.srth.lbv2.command;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -28,17 +29,70 @@ import java.util.stream.Collectors;
 
 public class CommandManager {
 
-    public static void registerCommands() {
+    private static final JDA bot = Bot.getBot();
+
+    private static final File CMDPATH = new File("cmds");
+
+    /**
+     * Updates a single command in the bot, logs an error if the command doesn't exist.
+     * For changes to take effect, the JSON data file of the command must be replaced by its old one in the cmds directory.
+     * The name of the JSON file must also be the same as the command name.
+     * @param id The ID of the command represented in the discord client.
+     */
+    @SuppressWarnings(value = "unused")
+    public static void upsertCommand(String id) {
+        Command command = bot.retrieveCommandById(id).onErrorMap(throwable -> null).complete();
+
+        if (command == null){
+            Bot.log.error("Command id {} does not exist.", id);
+            return;
+        }
+
+        File json = jsonFromName(command.getName());
+
+        if(json == null){
+            Bot.log.error("{} does not exist!", command.getName() + ".json");
+            return;
+        }
+
+        String raw;
+
+        try {
+            raw = raw(json);
+        } catch (FileNotFoundException e) {
+            return;
+        }
+
+        LBCommand.Data data = fromJSON(new JSONObject(raw));
+
+        SlashCommandData slashCmd = slashFromData(data);
+
+        command.editCommand().apply(slashCmd).queue(
+                (suc) -> {},
+                (fail) -> Bot.log.error("Failed to edit command {}: {}", id, fail.getMessage())
+        );
+    }
+
+    public static void registerCommands(boolean coldstart) {
         JDA bot = Bot.getBot();
+
+        if(coldstart){
+            wipeUselessCommands();
+        }
 
         List<LBCommand.Data> commandData;
 
         try {
             commandData = parseData();
         } catch (FileNotFoundException e) {
-            Bot.log.error("FileNotFoundException while registering commands: " + e.getMessage());
+            Bot.log.error("FileNotFoundException while registering commands: {}", e.getMessage());
             return;
         }
+
+        if(commandData == null){
+            return;
+        }
+
 
         for (LBCommand.Data data : commandData) {
             if(!data.shouldRegister()){
@@ -48,59 +102,84 @@ public class CommandManager {
             LBCommand command = safeNewInstance(data.backendClass());
 
             if(command == null){
-                Bot.log.warn("Skipping command " + data.name() + " because safeNewInstance returned null.");
+                Bot.log.warn("Skipping command {} because safeNewInstance returned null.", data.name());
                 continue;
             }
 
-            SlashCommandData cmdData = Commands.slash(data.name(), data.description());
+            SlashCommandData cmdData = slashFromData(data);
 
             String guildId = data.guildId();
-            OptionData[] options = data.options();
-            Permission[] permissions = data.permissions();
-            SubcommandData[] subCmds = data.subCommands();
-
-            //i hate this
-            if(options != null){
-                cmdData.addOptions(options);
-            }
-
-            if(permissions != null){
-                cmdData.setDefaultPermissions(DefaultMemberPermissions.enabledFor(permissions));
-            }
-
-            if(subCmds != null){
-                cmdData.addSubcommands(subCmds);
-            }
 
             if(guildId == null){
-                bot.upsertCommand(cmdData).queue(
-                        (suc) -> {
-                            bot.addEventListener(command);
-                            Bot.log.info("Registered global command " + data.name());
-                        },
-                        (err) -> Bot.log.warn("Failed to register global command " + data.name() + ": " + err.getMessage())
-                );
-            } else{
-                Guild g = bot.getGuildById(guildId);
-
-                if(g == null){
-                    Bot.log.error("Cannot upsert command " + data.name() + " beause the guild id is invalid");
-                    continue;
+                if(coldstart){
+                    bot.upsertCommand(cmdData).queue(
+                            (suc) -> {
+                                bot.addEventListener(command);
+                                Bot.log.info("Registered global command {}", data.name());
+                            },
+                            (err) -> Bot.log.warn("Failed to register global command {}: {}", data.name(), err.getMessage())
+                    );
+                } else{
+                    bot.addEventListener(command);
                 }
+            } else{
+                if(coldstart){
+                    Guild g = bot.getGuildById(guildId);
 
-                g.upsertCommand(cmdData).queue(
-                        (suc) -> {
-                            bot.addEventListener(command);
-                            Bot.log.info("Registered guild command " + data.name());
-                        },
-                        (err) -> Bot.log.warn("Failed to register guild command " + data.name() + ": " + err.getMessage())
-                );
+                    if(g == null){
+                        Bot.log.error("Cannot upsert command {} beause the guild id is invalid", data.name());
+                        continue;
+                    }
+
+                    g.upsertCommand(cmdData).queue(
+                            (suc) -> {
+                                bot.addEventListener(command);
+                                Bot.log.info("Registered guild command {}", data.name());
+                            },
+                            (err) -> Bot.log.warn("Failed to register guild command {}: {}", data.name(), err.getMessage())
+                    );
+                } else{
+                    bot.addEventListener(command);
+                }
             }
         }
     }
 
+    private static void wipeUselessCommands(){
+        for (Command command : bot.retrieveCommands().complete()) {
+            File f = jsonFromName(command.getName());
+
+            if(f == null){
+                command.delete().queue();
+            }
+        }
+    }
+
+    private static SlashCommandData slashFromData(LBCommand.Data data){
+        SlashCommandData cmdData = Commands.slash(data.name(), data.description());
+
+        OptionData[] options = data.options();
+        Permission[] permissions = data.permissions();
+        SubcommandData[] subCmds = data.subCommands();
+
+        //I hate this
+        if(options != null){
+            cmdData.addOptions(options);
+        }
+
+        if(permissions != null){
+            cmdData.setDefaultPermissions(DefaultMemberPermissions.enabledFor(permissions));
+        }
+
+        if(subCmds != null){
+            cmdData.addSubcommands(subCmds);
+        }
+
+        return cmdData;
+    }
+
     private static List<LBCommand.Data> parseData() throws FileNotFoundException {
-        List<File> jsons = getJson();
+        List<File> jsons = getJsonFiles();
 
         if(jsons == null){
             Bot.log.warn("getJson returned null");
@@ -110,51 +189,63 @@ public class CommandManager {
         List<LBCommand.Data> dataList = new ArrayList<>(jsons.size());
 
         for (File json : jsons) {
-            BufferedReader reader = new BufferedReader(new FileReader(json));
-
-            //it works
-            String raw = reader.lines().collect(Collectors.joining());
-
-            try {
-                reader.close();
-            } catch (IOException e) {
-                Bot.log.warn("IOException when closing reader parseData: " + e.getMessage());
-            }
+            String raw = raw(json);
 
             try{
                 JSONObject jsonObj = new JSONObject(raw);
 
-                Class<? extends LBCommand> backend;
-
-                try {
-                    backend = getBackendClass(jsonObj);
-                } catch (ClassNotFoundException e) {
-                    Bot.log.error("Backend class not found for file " + json.getName());
-                    continue;
-                } catch (InvalidCommandClassException e) {
-                    Bot.log.error("InvalidCommandClassException for classpath " + e.getClasspath() + ": " + e.getMessage());
-                    continue;
-                }
-
-                //notnull stuff
-                String name = jsonObj.getString("name");
-                String desc = jsonObj.getString("description");
-                boolean register = jsonObj.getBoolean("register");
-
-                //nullable stuff
-                String guildId = getGuildId(jsonObj);
-                Permission[] permissions = getPermissions(jsonObj);
-                OptionData[] optionData = getOptionData(jsonObj);
-
-                LBCommand.Data data = new LBCommand.Data(name, desc, register, backend, guildId, optionData, permissions, null);
+                LBCommand.Data data = fromJSON(jsonObj);
+                if (data == null) continue;
 
                 dataList.add(data);
 
             } catch (JSONException e){
-                Bot.log.error("Unknown JSONException registering command: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+                Bot.log.error("Unknown JSONException registering command: {}\n{}", e.getMessage(), Arrays.toString(e.getStackTrace()));
             }
         }
         return dataList;
+    }
+
+    @NotNull
+    private static String raw(File json) throws FileNotFoundException {
+        BufferedReader reader = new BufferedReader(new FileReader(json));
+
+        //it works
+        String raw = reader.lines().collect(Collectors.joining());
+
+        try {
+            reader.close();
+        } catch (IOException e) {
+            Bot.log.warn("IOException when closing reader parseData: {}", e.getMessage());
+        }
+        return raw;
+    }
+
+    @Nullable
+    private static LBCommand.Data fromJSON(JSONObject jsonObj) {
+        Class<? extends LBCommand> backend;
+
+        try {
+            backend = getBackendClass(jsonObj);
+        } catch (ClassNotFoundException e) {
+            Bot.log.error("Backend class not found, classpath: {}", jsonObj.getString("backendClass"));
+            return null;
+        } catch (InvalidCommandClassException e) {
+            Bot.log.error("InvalidCommandClassException for classpath {}: {}", e.getClasspath(), e.getMessage());
+            return null;
+        }
+
+        //notnull stuff
+        String name = jsonObj.getString("name");
+        String desc = jsonObj.getString("description");
+        boolean register = jsonObj.getBoolean("register");
+
+        //nullable stuff
+        String guildId = getGuildId(jsonObj);
+        Permission[] permissions = getPermissions(jsonObj);
+        OptionData[] optionData = getOptionData(jsonObj);
+
+        return new LBCommand.Data(name, desc, register, backend, guildId, optionData, permissions, null);
     }
 
     @Nullable
@@ -180,11 +271,43 @@ public class CommandManager {
                 boolean required = option.getBoolean("required");
                 OptionType optionType = OptionType.fromKey(option.getInt("type"));
 
+                JSONObject range = option.optJSONObject("range");
+
+
                 OptionData dat = new OptionData(optionType, name, description, required);
+
+                if(!(range == null)){
+                    switch (optionType){
+                        case NUMBER -> {
+                            long min = range.optInt("minInt", -1);
+                            long max = range.optInt("maxInt", -1);
+
+                            if(min != -1){
+                                dat.setMinValue(min);
+                            }
+
+                            if(max != -1){
+                                dat.setMaxValue(max);
+                            }
+                        }
+                        case STRING -> {
+                            int min = range.optInt("minLength", -1);
+                            int max = range.optInt("maxLength", -1);
+
+                            if(min != -1){
+                                dat.setMinLength(min);
+                            }
+
+                            if(max != -1){
+                                dat.setMaxLength(max);
+                            }
+                        }
+                    }
+                }
 
                 data[i] = dat;
             }catch (JSONException e){
-                Bot.log.error("Unknown JSONException getting option data: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+                Bot.log.error("Unknown JSONException getting option data: {}\n{}", e.getMessage(), Arrays.toString(e.getStackTrace()));
             }
         }
 
@@ -195,11 +318,9 @@ public class CommandManager {
     private static Permission[] getPermissions(@NotNull JSONObject obj){
         Objects.requireNonNull(obj);
 
-        JSONArray permissions;
+        JSONArray permissions = obj.optJSONArray("permissions");
 
-        try{
-            permissions = obj.getJSONArray("options");
-        } catch (JSONException e){
+        if(permissions == null){
             return null;
         }
 
@@ -210,7 +331,7 @@ public class CommandManager {
                 Permission p = Permission.getFromOffset(permissions.getInt(i));
                 perms[i] = p;
             } catch (JSONException e){
-                Bot.log.error("Unknown JSONException getting permissions: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+                Bot.log.error("Unknown JSONException getting permissions: {}\n{}", e.getMessage(), Arrays.toString(e.getStackTrace()));
             }
         }
 
@@ -265,28 +386,23 @@ public class CommandManager {
 
             return c.newInstance();
         } catch (NoSuchMethodException e) {
-            Bot.log.error("No such constructor for class " + command.getCanonicalName());
+            Bot.log.error("No such constructor for class {}", command.getCanonicalName());
             return null;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            Bot.log.error(e.getClass().getCanonicalName() + ": " + e.getMessage());
+            Bot.log.error("{}: {}", e.getClass().getCanonicalName(), e.getMessage());
             return null;
         }
     }
 
     @Nullable
-    private static List<File> getJson() throws FileNotFoundException {
-        File jsonFolder = new File("cmds");
+    private static List<File> getJsonFiles() {
+        boolean b = doesCmdPathExist();
 
-        if(!jsonFolder.exists()){
-            Bot.log.warn("cmds folder does not exist, creating new folder...");
-            boolean suc = jsonFolder.mkdir();
-            if(!suc){
-               Bot.log.warn("cmds folder creation unsuccessful");
-            }
-            throw new FileNotFoundException("Slash commands data folder does not exist!");
+        if(!b){
+            return null;
         }
 
-        File[] files = jsonFolder.listFiles();
+        File[] files = CMDPATH.listFiles();
 
         if(files == null){
             return null;
@@ -302,5 +418,34 @@ public class CommandManager {
         }
 
         return jsons;
+    }
+
+    @Nullable
+    private static File jsonFromName(String name) {
+        boolean b = doesCmdPathExist();
+
+        if(!b){
+            return null;
+        }
+
+        File json = new File(CMDPATH, name + ".json");
+
+        if(!json.exists()){
+            return null;
+        } else {
+            return json;
+        }
+    }
+
+    private static boolean doesCmdPathExist(){
+        if(!CMDPATH.exists()){
+            Bot.log.warn("cmds folder does not exist, creating new folder...");
+            boolean suc = CMDPATH.mkdir();
+            if(!suc){
+                Bot.log.warn("cmds folder creation unsuccessful");
+            }
+            return false;
+        }
+        return true;
     }
 }

@@ -18,13 +18,21 @@ public class Bot {
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
     public static void main(String[] args) {
+        boolean coldstart = false;
+
+        if(args.length != 0){
+            if(args[0].equals("--register")){
+                coldstart = true;
+            }
+        }
+
         String token;
 
         try{
             token = getToken();
         } catch (FileNotFoundException e) {
             token = null;
-            log.error("File not found exception getting token: " + e.getMessage());
+            log.error("File not found exception getting token: {}", e.getMessage());
             System.exit(-1);
         }
 
@@ -33,16 +41,17 @@ public class Bot {
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .enableCache(CacheFlag.VOICE_STATE)
                 .setAutoReconnect(true)
-                .setBulkDeleteSplittingEnabled(true);
+                .setBulkDeleteSplittingEnabled(true)
+                .setMemberCachePolicy(MemberCachePolicy.ALL);
         bot = builder.build();
 
         try {
             bot.awaitReady();
         } catch (InterruptedException e) {
-            log.warn("Await ready interrupted: " + e.getMessage());
+            log.warn("Await ready interrupted: {}", e.getMessage());
         }
 
-        CommandManager.registerCommands();
+        CommandManager.registerCommands(coldstart);
     }
 
     public static JDA getBot() {

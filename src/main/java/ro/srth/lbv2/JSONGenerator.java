@@ -1,11 +1,12 @@
 package ro.srth.lbv2;
 
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import ro.srth.lbv2.command.slash.TestCommand;
+import ro.srth.lbv2.command.slash.AsciifyCommand;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.BufferedWriter;
@@ -17,14 +18,26 @@ import java.util.List;
 
 public class JSONGenerator {
     public static void main(String[] args) {
-        String name = "test";
-        String description = "test";
-        String classPath = TestCommand.class.getName();
+        String name = "asciify";
+        String description = "Turns an image into a bunch of ascii characters.";
+        String classPath = AsciifyCommand.class.getName();
         boolean register = true;
 
         String guildId = null;
         Permission[] perms = null;
-        OptionData[] options = null;
+        OptionData[] options = {
+                new OptionData(OptionType.ATTACHMENT, "image", "The image to asciify").setRequired(true),
+                new OptionData(OptionType.INTEGER, "width", "The width in characters of the ascii result. Default is `100`.")
+                        .setRequired(false)
+                        .setMinValue(20)
+                        .setMaxValue(145),
+                new OptionData(OptionType.INTEGER, "height", "The height in characters of the ascii result. Default is 50.")
+                        .setRequired(false)
+                        .setMinValue(20)
+                        .setMaxValue(50),
+                new OptionData(OptionType.BOOLEAN, "inverted", "Decides if the character set is reversed (darker = denser character).")
+                        .setRequired(false)
+        };
         SubcommandData[] subCmds = null;
 
         JSONObject obj = new JSONObject();
@@ -101,6 +114,36 @@ public class JSONGenerator {
                     .put("description", option.getDescription())
                     .put("type", option.getType().getKey())
                     .put("required", option.isRequired());
+
+
+            switch (option.getType()){
+                case STRING -> {
+                    var ranges = new JSONObject();
+
+                    if(option.getMinLength() != null){
+                        ranges.put("minLength", option.getMinLength());
+                    }
+
+                    if(option.getMaxLength() != null){
+                        ranges.put("maxLength", option.getMaxLength());
+                    }
+
+                    optionObj.put("ranges", ranges);
+                }
+                case INTEGER -> {
+                    var ranges = new JSONObject();
+
+                    if(option.getMinValue() != null){
+                        ranges.put("minInt", option.getMinValue());
+                    }
+
+                    if(option.getMaxValue() != null){
+                        ranges.put("maxInt", option.getMaxValue());
+                    }
+
+                    optionObj.put("ranges", ranges);
+                }
+            }
 
             optionArr.put(optionObj);
         }
