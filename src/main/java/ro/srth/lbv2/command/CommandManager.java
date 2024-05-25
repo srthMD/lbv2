@@ -4,12 +4,9 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.Command;
-import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -27,6 +24,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+/**
+ * Manages registering all commands from JSON data to discord.
+ * <br>
+ * After logon, the bot will usually call {@link #registerCommands(boolean) registerCommamnds} first.
+ */
 public class CommandManager {
 
     private static final JDA bot = Bot.getBot();
@@ -34,12 +36,15 @@ public class CommandManager {
     private static final File CMDPATH = new File("cmds");
 
     /**
-     * Updates a single command in the bot, logs an error if the command doesn't exist.
+     * (Unimplemented)
+     * <br>
+     * Updates a single command in the bot, if the command is not registered in discord, an error will be logged (not thrown).
+     * <br>
+     * <br>
      * For changes to take effect, the JSON data file of the command must be replaced by its old one in the cmds directory.
      * The name of the JSON file must also be the same as the command name.
      * @param id The ID of the command represented in the discord client.
      */
-    @SuppressWarnings(value = "unused")
     public static void upsertCommand(String id) {
         Command command = bot.retrieveCommandById(id).onErrorMap(throwable -> null).complete();
 
@@ -65,7 +70,7 @@ public class CommandManager {
 
         LBCommand.Data data = fromJSON(new JSONObject(raw));
 
-        SlashCommandData slashCmd = slashFromData(data);
+        SlashCommandData slashCmd = data.toSlashCommand();
 
         command.editCommand().apply(slashCmd).queue(
                 (suc) -> {},
@@ -73,6 +78,11 @@ public class CommandManager {
         );
     }
 
+    /**
+     * The main entry point to register commands, updating or registering commands as needed and setting up event listeners.
+     * If not starting from a cold start (determined by the --register argument), then only the event listeners will be set up.
+     * @param coldstart Decides whether to register commands to discord or not.
+     */
     public static void registerCommands(boolean coldstart) {
         JDA bot = Bot.getBot();
 
@@ -99,14 +109,14 @@ public class CommandManager {
                 continue;
             }
 
-            LBCommand command = safeNewInstance(data.backendClass());
+            LBCommand command = safeNewInstance(data.backendClass(), data);
 
             if(command == null){
                 Bot.log.warn("Skipping command {} because safeNewInstance returned null.", data.name());
                 continue;
             }
 
-            SlashCommandData cmdData = slashFromData(data);
+            SlashCommandData cmdData = data.toSlashCommand();
 
             String guildId = data.guildId();
 
@@ -145,6 +155,7 @@ public class CommandManager {
         }
     }
 
+
     private static void wipeUselessCommands(){
         for (Command command : bot.retrieveCommands().complete()) {
             File f = jsonFromName(command.getName());
@@ -155,28 +166,6 @@ public class CommandManager {
         }
     }
 
-    private static SlashCommandData slashFromData(LBCommand.Data data){
-        SlashCommandData cmdData = Commands.slash(data.name(), data.description());
-
-        OptionData[] options = data.options();
-        Permission[] permissions = data.permissions();
-        SubcommandData[] subCmds = data.subCommands();
-
-        //I hate this
-        if(options != null){
-            cmdData.addOptions(options);
-        }
-
-        if(permissions != null){
-            cmdData.setDefaultPermissions(DefaultMemberPermissions.enabledFor(permissions));
-        }
-
-        if(subCmds != null){
-            cmdData.addSubcommands(subCmds);
-        }
-
-        return cmdData;
-    }
 
     private static List<LBCommand.Data> parseData() throws FileNotFoundException {
         List<File> jsons = getJsonFiles();
@@ -206,6 +195,7 @@ public class CommandManager {
         return dataList;
     }
 
+
     @NotNull
     private static String raw(File json) throws FileNotFoundException {
         BufferedReader reader = new BufferedReader(new FileReader(json));
@@ -220,6 +210,7 @@ public class CommandManager {
         }
         return raw;
     }
+
 
     @Nullable
     private static LBCommand.Data fromJSON(JSONObject jsonObj) {
@@ -249,7 +240,7 @@ public class CommandManager {
     }
 
     @Nullable
-    private static OptionData[] getOptionData(@NotNull JSONObject obj){
+    private static OptionData[] getOptionData(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
 
         JSONArray options;
@@ -272,38 +263,13 @@ public class CommandManager {
                 OptionType optionType = OptionType.fromKey(option.getInt("type"));
 
                 JSONObject range = option.optJSONObject("range");
+                JSONArray choices = option.optJSONArray("choices");
 
 
                 OptionData dat = new OptionData(optionType, name, description, required);
 
-                if(!(range == null)){
-                    switch (optionType){
-                        case NUMBER -> {
-                            long min = range.optInt("minInt", -1);
-                            long max = range.optInt("maxInt", -1);
-
-                            if(min != -1){
-                                dat.setMinValue(min);
-                            }
-
-                            if(max != -1){
-                                dat.setMaxValue(max);
-                            }
-                        }
-                        case STRING -> {
-                            int min = range.optInt("minLength", -1);
-                            int max = range.optInt("maxLength", -1);
-
-                            if(min != -1){
-                                dat.setMinLength(min);
-                            }
-
-                            if(max != -1){
-                                dat.setMaxLength(max);
-                            }
-                        }
-                    }
-                }
+                setRanges(range, dat);
+                setChoices(choices, dat);
 
                 data[i] = dat;
             }catch (JSONException e){
@@ -314,8 +280,78 @@ public class CommandManager {
         return data;
     }
 
+    //extracted
+    private static void setRanges(JSONObject range, OptionData dat) {
+        if(!(range == null)){
+            switch (dat.getType()){
+                case NUMBER -> {
+                    long min = range.optInt("minInt", -1);
+                    long max = range.optInt("maxInt", -1);
+
+                    if(min != -1){
+                        dat.setMinValue(min);
+                    }
+
+                    if(max != -1){
+                        dat.setMaxValue(max);
+                    }
+                }
+                case STRING -> {
+                    int min = range.optInt("minLength", -1);
+                    int max = range.optInt("maxLength", -1);
+
+                    if(min != -1){
+                        dat.setMinLength(min);
+                    }
+
+                    if(max != -1){
+                        dat.setMaxLength(max);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void setChoices(JSONArray choices, OptionData dat) {
+        if(!(choices == null)){
+            switch (dat.getType()){
+                //i tried using Function idfk why it didnt work
+                case STRING -> {
+                    for(int i = 0; i < choices.length(); i++){
+                        JSONObject choice = choices.getJSONObject(i);
+
+                        String name = choice.getString("name");
+                        String val = choice.getString("val");
+
+                        dat.addChoice(name, val);
+                    }
+                }
+                case INTEGER -> {
+                    for(int i = 0; i < choices.length(); i++){
+                        JSONObject choice = choices.getJSONObject(i);
+
+                        String name = choice.getString("name");
+                        int val = choice.getInt("val");
+
+                        dat.addChoice(name, val);
+                    }
+                }
+                case NUMBER -> {
+                    for(int i = 0; i < choices.length(); i++){
+                        JSONObject choice = choices.getJSONObject(i);
+
+                        String name = choice.getString("name");
+                        double val = choice.getDouble("val");
+
+                        dat.addChoice(name, val);
+                    }
+                }
+            }
+        }
+    }
+
     @Nullable
-    private static Permission[] getPermissions(@NotNull JSONObject obj){
+    private static Permission[] getPermissions(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
 
         JSONArray permissions = obj.optJSONArray("permissions");
@@ -338,6 +374,7 @@ public class CommandManager {
         return perms;
     }
 
+
     @Nullable
     private static String getGuildId(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
@@ -350,6 +387,7 @@ public class CommandManager {
             return null;
         }
     }
+
 
     @SuppressWarnings(value = "unchecked")
     private static Class<? extends LBCommand> getBackendClass(@NotNull JSONObject obj) throws ClassNotFoundException, InvalidCommandClassException {
@@ -379,12 +417,13 @@ public class CommandManager {
         return (Class<? extends LBCommand>) clazz;
     }
 
-    @Nullable
-    private static LBCommand safeNewInstance(Class<? extends LBCommand> command){
-        try {
-            Constructor<? extends LBCommand> c = command.getConstructor();
 
-            return c.newInstance();
+    @Nullable
+    private static LBCommand safeNewInstance(Class<? extends LBCommand> command, LBCommand.Data dat){
+        try {
+            Constructor<? extends LBCommand> c = command.getConstructor(LBCommand.Data.class);
+
+            return c.newInstance(dat);
         } catch (NoSuchMethodException e) {
             Bot.log.error("No such constructor for class {}", command.getCanonicalName());
             return null;
@@ -393,6 +432,7 @@ public class CommandManager {
             return null;
         }
     }
+
 
     @Nullable
     private static List<File> getJsonFiles() {
@@ -420,6 +460,7 @@ public class CommandManager {
         return jsons;
     }
 
+
     @Nullable
     private static File jsonFromName(String name) {
         boolean b = doesCmdPathExist();
@@ -436,6 +477,7 @@ public class CommandManager {
             return json;
         }
     }
+
 
     private static boolean doesCmdPathExist(){
         if(!CMDPATH.exists()){

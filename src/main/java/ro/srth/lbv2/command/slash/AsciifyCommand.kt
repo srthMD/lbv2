@@ -1,183 +1,128 @@
-package ro.srth.lbv2.command.slash;
+package ro.srth.lbv2.command.slash
 
-import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.utils.FileUpload;
-import org.jetbrains.annotations.NotNull;
-import ro.srth.lbv2.Bot;
-import ro.srth.lbv2.command.LBCommand;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import net.dv8tion.jda.api.interactions.commands.OptionMapping
+import net.dv8tion.jda.api.utils.FileUpload
+import ro.srth.lbv2.Bot
+import ro.srth.lbv2.command.LBCommand
+import java.awt.Color
+import java.awt.Image
+import java.awt.image.BufferedImage
+import java.io.IOException
+import java.util.concurrent.ExecutionException
+import javax.imageio.ImageIO
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.concurrent.ExecutionException;
+class AsciifyCommand(data: Data?) : LBCommand(data) {
 
-public class AsciifyCommand extends LBCommand {
-    private static final String CHARS = " .:-=+*#%@";
-    private static final String REVERSED = new StringBuilder(CHARS).reverse().toString();
-    private static final int LENGTH = CHARS.length();
+    companion object {
+        const val CHARS = " .:-=+*#%@"
+        const val REVERSED = "@%#*+=-:. "
+        const val LENGTH = CHARS.length
 
-    private static final int DEFAULTWIDTH = 100;
-    private static final int DEFAULTHEIGHT = 50;
-    
-    private static Color[] palette;
-
-    static {
-        palette = new Color[CHARS.length()];
-        
-        int color = 0;
-        for (int i = 0; i < CHARS.length(); i++) {
-            palette[i] = new Color(color, color, color);
-            color += 255/CHARS.length();
-        }
+        const val DEFAULTWIDTH = 100
+        const val DEFAULTHEIGHT = 50
     }
 
-    @Override
-    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
-        var mapping = event.getOption("image");
+    override fun runSlashCommand(event: SlashCommandInteractionEvent) {
+        val mapping = event.getOption("image")
 
-        int argWidth = event.getOption("width", DEFAULTWIDTH, OptionMapping::getAsInt);
-        int argHeight = event.getOption("height", DEFAULTHEIGHT, OptionMapping::getAsInt);
+        val argWidth = event.getOption(
+            "width", DEFAULTWIDTH
+        ) { obj: OptionMapping -> obj.asInt }
+        val argHeight = event.getOption(
+            "height", DEFAULTHEIGHT
+        ) { obj: OptionMapping -> obj.asInt }
 
-        boolean reversed = event.getOption("reversed", true, OptionMapping::getAsBoolean);
+        val reversed = event.getOption(
+            "reversed", false
+        ) { obj: OptionMapping -> obj.asBoolean }
 
-        if(mapping == null){
-            event.reply("An error occurred getting the image.").setEphemeral(true).queue();
-            return;
+        if (mapping == null) {
+            event.reply("An error occurred getting the image.").setEphemeral(true).queue()
+            return
         }
 
-        var attachment = mapping.getAsAttachment();
+        val attachment = mapping.asAttachment
 
-        if(!attachment.isImage()){
-            event.reply("File is not an image.").setEphemeral(true).queue();
-            return;
+        if (!attachment.isImage) {
+            event.reply("File is not an image.").setEphemeral(true).queue()
+            return
         }
 
-        event.deferReply(true).setEphemeral(true).queue();
+        event.deferReply().queue()
 
+        try {
+            attachment.proxy.download().get().use { imageStream ->
+                val image: BufferedImage = downscale(ImageIO.read(imageStream), argWidth, argHeight)
 
-        try(InputStream imageStream = attachment.getProxy().download().get()) {
-            var image = downscale(ImageIO.read(imageStream), argWidth, argHeight);
+                val width = image.width
+                val height = image.height
 
+                val sb = StringBuilder()
+                for (y in 0 until height) {
+                    for (x in 0 until width) {
+                        val color = Color(image.getRGB(x, y))
+                        val r = color.red
+                        val g = color.green
+                        val b = color.blue
 
-            File outputfile = new File("saved.png");
-            ImageIO.write(image, "png", outputfile);
+                        val avg = (r + g + b) / 3
 
-            int width = image.getWidth();
-            int height = image.getHeight();
-
-            StringBuilder sb = new StringBuilder();
-            for (int y = 0; y < height; y++) {
-                for (int x = 0; x < width; x++) {
-                    Color color = new Color(image.getRGB(x, y));
-                    int r = color.getRed();
-                    int g = color.getGreen();
-                    int b = color.getBlue();
-
-                    int avg = (r+g+b)/3; // we dont need precision
-
-                    sb.append(grayscaleToChar(avg, reversed));
+                        sb.append(grayscaleToChar(avg, reversed))
+                    }
+                    sb.append("\n")
                 }
-                sb.append("\n");
+
+                image.flush()
+                imageStream.close()
+
+                val raw = sb.toString()
+
+                val hook = event.hook
+                FileUpload.fromData(toByteArray(raw), "ascii.txt").use { upload ->
+                    hook.sendFiles(upload).queue()
+                }
             }
-
-            image.flush();
-            imageStream.close();
-
-            String raw = sb.toString();
-
-            var hook = event.getHook();
-
-            try(FileUpload upload = FileUpload.fromData(toByteArray(raw), "ascii.txt")) {
-                hook.sendFiles(upload).queue();
-            }
-
-        } catch (IOException | ExecutionException | InterruptedException e) {
-            event.reply("Something went wrong while executing the command.").setEphemeral(true).queue();
-            Bot.log.error("Error running AsciifyCommand from user: {}\n Message: {},\n Stacktrace: \n{}", event.getUser().getId(), e.getMessage(), Arrays.toString(e.getStackTrace()));
-        }
-    }
-
-    private char grayscaleToChar(int avg, boolean reversed){
-        if(reversed){
-            return REVERSED.charAt((LENGTH - 1) * avg / 255);
-        } else{
-            return CHARS.charAt((LENGTH - 1) * avg / 255);
-        }
-    }
-
-    private BufferedImage downscale(BufferedImage originalImage, int width, int height) {
-        Image resultingImage = originalImage.getScaledInstance(width, height, Image.SCALE_DEFAULT);
-        BufferedImage outputImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
-        outputImage.getGraphics().drawImage(resultingImage, 0, 0, null);
-
-//        for (int y = 0; y < outputImage.getHeight(); y++) {
-//            for (int x = 0; x < outputImage.getWidth(); x++) {
-//                Color old = new Color(originalImage.getRGB(x, y));
-//
-//                Color newColor = getClosestColor(old);
-//
-//                outputImage.setRGB(x, y, newColor.getRGB());
-//
-//                int avg = avg(newColor) - avg(old);
-//                Color err = new Color(avg, avg, avg);
-//
-//                applyDith(outputImage, x+1, y, err, 7);
-//                applyDith(outputImage, x-1, y+1, err, 3);
-//                applyDith(outputImage, x, y+1, err, 5);
-//                applyDith(outputImage, x+1, y+1, err, 1);
-//            }
-//        }
-        return outputImage;
-    }
-
-    private void applyDith(BufferedImage img, int x, int y, Color err, int val){
-        try{
-            Color c = new Color(img.getRGB(x, y));
-            img.setRGB(x, y, add(c, mul(err, (double) val / 16)).getRGB());
-        } catch (ArrayIndexOutOfBoundsException ignored){}
-    }
-
-    private Color getClosestColor(Color color){
-        Color closest = palette[0];
-
-        for (Color p : palette) {
-            if(diff(p, color) < diff(p, closest)){
-                closest = color;
+        } catch (e: Exception) {
+            when (e) {
+                is IOException, is ExecutionException, is InterruptedException -> {
+                    event.reply("Something went wrong while executing the command.").setEphemeral(true).queue()
+                    Bot.log.error(
+                        "Error running AsciifyCommand from user: {}\n Message: {},\n Stacktrace: \n{}",
+                        event.user.id,
+                        e.message,
+                        e.stackTrace.contentToString()
+                    )
+                }
+                else -> throw e
             }
         }
-
-        return closest;
     }
 
-    private int avg(Color c){
-        return (c.getRed() + c.getBlue() + c.getGreen())/3;
+    private fun grayscaleToChar(avg: Int, reversed: Boolean): Char {
+        return if (reversed) {
+            REVERSED[(LENGTH - 1) * avg / 255]
+        } else {
+            CHARS[(LENGTH - 1) * avg / 255]
+        }
     }
 
-    private int diff(Color c, Color other) {
-        return Math.abs(other.getRed() - c.getRed()) +  Math.abs(other.getGreen() - c.getGreen()) +  Math.abs(other.getBlue() - c.getBlue());
+    private fun downscale(originalImage: BufferedImage, width: Int, height: Int): BufferedImage {
+        val resultingImage = originalImage.getScaledInstance(width, height, Image.SCALE_DEFAULT)
+        val outputImage = BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY)
+        outputImage.graphics.drawImage(resultingImage, 0, 0, null)
+
+        return outputImage
     }
 
-    private Color add(Color c, Color other){
-        return new Color(c.getRed() + other.getRed(), c.getGreen() + other.getGreen(), c.getBlue() + other.getBlue());
-    }
+    private fun toByteArray(raw: String): ByteArray {
+        val bytes = ByteArray(raw.length)
+        for (i in raw.indices) {
+            val c = raw[i]
 
-    private Color mul(Color c, double d){
-        return new Color((int) (c.getRed()*d), (int) (c.getGreen()*d), (int) (c.getBlue()*d));
-    }
-
-    private byte[] toByteArray(String raw){
-        byte[] bytes = new byte[raw.length()];
-        for (int i = 0; i < raw.length(); i++) {
-            char c = raw.charAt(i);
-
-            bytes[i] = (byte) c;
+            bytes[i] = c.code.toByte()
         }
 
-        return bytes;
+        return bytes
     }
 }

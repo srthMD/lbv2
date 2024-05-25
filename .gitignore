@@ -3,7 +3,7 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-/src/main/java/ro/srth/lbv2/JSONGenerator.java
+src/main/java/ro/srth/lbv2/JSONGenerator.java
 
 ### IntelliJ IDEA ###
 .idea

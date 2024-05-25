@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 group = 'ro.srth.lbv2'
@@ -19,12 +20,16 @@ jar{
 dependencies {
     implementation("net.dv8tion:JDA:5.0.0-beta.22")
     implementation('ch.qos.logback:logback-classic:1.4.14')
-    //implementation platform('io.projectreactor:reactor-bom:2023.0.5')
-    //implementation('io.projectreactor:reactor-core')
-    //implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("org.json:json:20240303")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+    //https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
+    implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
 }
 
 shadowJar {
-    exclude("ro/srth/lbv2/JSONGenerator")
+    exclude 'ro/srth/lbv2/JSONGenerator*'
+}
+kotlin {
+    jvmToolchain(21)
 }
