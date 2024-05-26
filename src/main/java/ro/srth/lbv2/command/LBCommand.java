@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ro.srth.lbv2.Bot;
 
 /**
  * The base class for all slash command handler classes.
@@ -29,11 +30,21 @@ public abstract class LBCommand extends ListenerAdapter {
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         try{
+            if(event.isAcknowledged()){
+                return;
+            }
+
             if(event.getName().equals(this.data.name)){
                 runSlashCommand(event);
             }
         } catch (Exception e){
-            event.reply("An unknown error occurred.").setEphemeral(true).queue();
+            if(event.isAcknowledged()){
+                event.getHook().sendMessage("An unknown error occurred.").queue();
+            } else{
+                event.reply("An unknown error occurred.").setEphemeral(true).queue();
+            }
+
+            Bot.log.error("{} running command {}: {}", e.getClass().getCanonicalName(), event.getFullCommandName(), e.getMessage());
         }
     }
 

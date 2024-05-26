@@ -33,7 +33,10 @@ public class JSONGenerator {
                 new OptionData(OptionType.INTEGER, "width", "The target width for the compressed video").setMaxValue(1000),
                 new OptionData(OptionType.INTEGER, "height", "The target height for the compressed video").setMaxValue(1000),
                 new OptionData(OptionType.INTEGER, "bitrate", "The bitrate of the compressed video").setMinValue(2000).setMaxValue(18000),
-                new OptionData(OptionType.INTEGER, "fps", "The fps of the compressed video").setMinValue(1).setMaxValue(60)
+                new OptionData(OptionType.INTEGER, "fps", "The fps of the compressed video").setMinValue(1).setMaxValue(60),
+                new OptionData(OptionType.INTEGER, "audiobitrate", "The audio bitrate of the compressed video").setMinValue(4000).setMaxValue(20000),
+                new OptionData(OptionType.STRING, "vf", "Advanced video filter option for ffmpeg"),
+                new OptionData(OptionType.STRING, "af", "Advanced audio filter option for ffmpeg")
         };
         SubcommandData[] subCmds = null;
 

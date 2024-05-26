@@ -26,7 +26,11 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         var width = event.getOption("width", null) { obj: OptionMapping -> obj.asInt }
         var height = event.getOption("height", null) { obj: OptionMapping -> obj.asInt }
         val bitrate = event.getOption("bitrate", 8000) { obj: OptionMapping -> obj.asInt }
+        val audioBitrate = event.getOption("audiobitrate", 16000) { obj: OptionMapping -> obj.asInt }
         val fps = event.getOption("fps", 5) { obj: OptionMapping -> obj.asInt }
+
+        val vf = event.getOption("vf", "") { obj: OptionMapping -> obj.asString }
+        val af = event.getOption("af", "") { obj: OptionMapping -> obj.asString }
 
         event.deferReply().queue()
 
@@ -45,7 +49,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
             height = video.height
         }
 
-        val compressed = compressVideo(vidFile, video.fileExtension!!, width, height, bitrate, fps)
+        val compressed = compressVideo(vidFile, video.fileExtension!!, width, height, bitrate, fps, audioBitrate, vf, af)
 
         event.hook.sendFiles(FileUpload.fromData(compressed)).complete()
 
@@ -53,7 +57,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         vidFile.deleteOnExit()
     }
 
-    private fun compressVideo(vid: File, extension: String, width: Int, height: Int, bitrate: Int, fps: Int): File {
+    private fun compressVideo(vid: File, extension: String, width: Int, height: Int, bitrate: Int, fps: Int, audioBitrate: Int, vf: String, af: String): File {
         val builder = FFmpegBuilder()
 
         val out = File.createTempFile("lbvidjob", ".$extension")
@@ -62,11 +66,17 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
             .overrideOutputFiles(true)
             .addOutput(out.path)
             .setVideoBitRate(bitrate.toLong())
-            .setAudioBitRate(16000)
+            .setAudioBitRate(audioBitrate.toLong())
             .setVideoFrameRate(fps.toDouble())
-            .setVideoWidth(width)
-            .setVideoHeight(height)
-            .setAudioFilter("volume=10")
+            .setVideoResolution(width, height)
+
+        if(af.isNotEmpty()){
+            builder.setAudioFilter(af)
+        }
+
+        if(vf.isNotEmpty()){
+            builder.setVideoFilter(vf)
+        }
 
         val exec = FFmpegExecutor(ffmpeg)
 
