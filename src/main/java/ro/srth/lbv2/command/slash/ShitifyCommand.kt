@@ -32,12 +32,12 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         val vf = event.getOption("vf", "") { obj: OptionMapping -> obj.asString }
         val af = event.getOption("af", "") { obj: OptionMapping -> obj.asString }
 
-        event.deferReply().queue()
-
         if (!video!!.isVideo) {
-            event.reply("Attachment provided is not a video file").setEphemeral(true).queue()
+            event.reply("Attachment provided is not a valid video file").setEphemeral(true).queue()
             return
         }
+
+        event.deferReply().queue()
 
         val vidFile = video.proxy.downloadToFile(File.createTempFile("lbvid", ".${video.fileExtension}")).join()
 

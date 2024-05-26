@@ -77,3 +77,5 @@ public class Bot {
         return FFMPEG;
     }
 }
+
+//Adam You Are A Fat Cunt

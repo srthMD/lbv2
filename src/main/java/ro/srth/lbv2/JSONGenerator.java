@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import ro.srth.lbv2.command.slash.ShitifyCommand;
+import ro.srth.lbv2.command.slash.SayCommand;
 
 
 import javax.swing.filechooser.FileSystemView;
@@ -21,22 +21,18 @@ import java.util.List;
 @SuppressWarnings(value = {"unused", "ConstantValue", "UnreachableCode"})
 public class JSONGenerator {
     public static void main(String[] args) {
-        String name = "shitify";
-        String description = "Makes video shit";
-        String classPath = ShitifyCommand.class.getName();
+        String name = "say";
+        String description = "Makes the bot say something";
+        String classPath = SayCommand.class.getName();
         boolean register = true;
 
         String guildId = null;
-        Permission[] perms = null;
+        Permission[] perms = {
+                Permission.ADMINISTRATOR
+        };
         OptionData[] options = {
-                new OptionData(OptionType.ATTACHMENT, "video", "test").setRequired(true),
-                new OptionData(OptionType.INTEGER, "width", "The target width for the compressed video").setMaxValue(1000),
-                new OptionData(OptionType.INTEGER, "height", "The target height for the compressed video").setMaxValue(1000),
-                new OptionData(OptionType.INTEGER, "bitrate", "The bitrate of the compressed video").setMinValue(2000).setMaxValue(18000),
-                new OptionData(OptionType.INTEGER, "fps", "The fps of the compressed video").setMinValue(1).setMaxValue(60),
-                new OptionData(OptionType.INTEGER, "audiobitrate", "The audio bitrate of the compressed video").setMinValue(4000).setMaxValue(20000),
-                new OptionData(OptionType.STRING, "vf", "Advanced video filter option for ffmpeg"),
-                new OptionData(OptionType.STRING, "af", "Advanced audio filter option for ffmpeg")
+                new OptionData(OptionType.STRING, "msg", "whatever you want the bot to say, put a space if you want just an attachment").setRequired(true),
+                new OptionData(OptionType.ATTACHMENT, "attachment", "the attachment you want to send"),
         };
         SubcommandData[] subCmds = null;
 
