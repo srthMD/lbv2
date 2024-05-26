@@ -284,7 +284,7 @@ public class CommandManager {
     private static void setRanges(JSONObject range, OptionData dat) {
         if(!(range == null)){
             switch (dat.getType()){
-                case NUMBER -> {
+                case INTEGER, NUMBER -> {
                     long min = range.optInt("minInt", -1);
                     long max = range.optInt("maxInt", -1);
 
