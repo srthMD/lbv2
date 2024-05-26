@@ -262,7 +262,7 @@ public class CommandManager {
                 boolean required = option.getBoolean("required");
                 OptionType optionType = OptionType.fromKey(option.getInt("type"));
 
-                JSONObject range = option.optJSONObject("range");
+                JSONObject range = option.optJSONObject("ranges");
                 JSONArray choices = option.optJSONArray("choices");
 
 
@@ -282,9 +282,9 @@ public class CommandManager {
 
     //extracted
     private static void setRanges(JSONObject range, OptionData dat) {
-        if(!(range == null)){
+        if(range != null){
             switch (dat.getType()){
-                case NUMBER -> {
+                case INTEGER, NUMBER -> {
                     long min = range.optInt("minInt", -1);
                     long max = range.optInt("maxInt", -1);
 
