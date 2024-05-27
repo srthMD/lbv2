@@ -43,8 +43,6 @@ Before running for the first time three things will need to be set up.
 * A folder called cmds.
 * A folder called ffmpeg with an FFMPEG installation.
 <br>
-<br>
-
 
 **Note that any commands without their respective JSON files will not be registered.**
 
