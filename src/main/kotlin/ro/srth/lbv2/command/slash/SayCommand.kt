@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.utils.FileUpload
 import ro.srth.lbv2.Bot
 import ro.srth.lbv2.command.LBCommand
-import java.util.concurrent.ThreadLocalRandom
 
 class SayCommand(data: Data?) : LBCommand(data) {
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
@@ -13,24 +12,24 @@ class SayCommand(data: Data?) : LBCommand(data) {
         val attachment = event.getOption("attachment", OptionMapping::getAsAttachment)
 
         val interaction = event.channel.sendMessage(str)
-        event.reply("Sending message...").setEphemeral(true).queue()
+
+        val reply = if (attachment == null) "Sending message..." else "Downloading attachment..."
+        event.reply(reply).setEphemeral(true).queue()
 
 
         if (attachment != null) {
             val stream = attachment.proxy.download().get()
-            val rand = ThreadLocalRandom.current().nextLong()
+            val rand = Bot.rand().nextLong();
             interaction.addFiles(FileUpload.fromData(stream, "attachment${rand}.${attachment.fileExtension}"))
-        } else{
-            if(str.isEmpty()){
-                event.reply("You must send atleast a message or atatchment").setEphemeral(true).queue()
-            }
+        } else if (str.isEmpty()) {
+            event.reply("You must send atleast a message or atatchment").setEphemeral(true).queue()
         }
 
         interaction.queue(
-            {
+            /* success = */ {
                 event.hook.editOriginal("done").queue()
             },
-            { err ->
+            /* failure = */ { err ->
                 event.hook.editOriginal("An error occured while sending").queue()
                 Bot.log.error(err.javaClass.canonicalName + " while using /say: ${err.message}")
             })

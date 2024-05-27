@@ -23,14 +23,14 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
     private fun handleVideo(event: SlashCommandInteractionEvent) {
         val video = event.getOption("video") { obj: OptionMapping -> obj.asAttachment }
 
-        var width = event.getOption("width", null) { obj: OptionMapping -> obj.asInt }
-        var height = event.getOption("height", null) { obj: OptionMapping -> obj.asInt }
-        val bitrate = event.getOption("bitrate", 8000) { obj: OptionMapping -> obj.asInt }
-        val audioBitrate = event.getOption("audiobitrate", 16000) { obj: OptionMapping -> obj.asInt }
-        val fps = event.getOption("fps", 5) { obj: OptionMapping -> obj.asInt }
+        var width = event.getOption("width", null, OptionMapping::getAsInt)
+        var height = event.getOption("height", null, OptionMapping::getAsInt)
+        val bitrate = event.getOption("bitrate", 8000, OptionMapping::getAsInt)
+        val audioBitrate = event.getOption("audiobitrate", 16000, OptionMapping::getAsInt)
+        val fps = event.getOption("fps", 5, OptionMapping::getAsInt)
 
-        val vf = event.getOption("vf", "") { obj: OptionMapping -> obj.asString }
-        val af = event.getOption("af", "") { obj: OptionMapping -> obj.asString }
+        val vf = event.getOption("vf", "", OptionMapping::getAsString)
+        val af = event.getOption("af", "",  OptionMapping::getAsString)
 
         if (!video!!.isVideo) {
             event.reply("Attachment provided is not a valid video file").setEphemeral(true).queue()

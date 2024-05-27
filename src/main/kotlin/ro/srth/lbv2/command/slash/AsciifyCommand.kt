@@ -26,16 +26,9 @@ class AsciifyCommand(data: Data?) : LBCommand(data) {
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
         val mapping = event.getOption("image")
 
-        val argWidth = event.getOption(
-            "width", DEFAULTWIDTH
-        ) { obj: OptionMapping -> obj.asInt }
-        val argHeight = event.getOption(
-            "height", DEFAULTHEIGHT
-        ) { obj: OptionMapping -> obj.asInt }
-
-        val reversed = event.getOption(
-            "reversed", false
-        ) { obj: OptionMapping -> obj.asBoolean }
+        val argWidth = event.getOption("width", DEFAULTWIDTH, OptionMapping::getAsInt)
+        val argHeight = event.getOption("height", DEFAULTHEIGHT, OptionMapping::getAsInt)
+        val reversed = event.getOption("reversed", false, OptionMapping::getAsBoolean)
 
         if (mapping == null) {
             event.reply("An error occurred getting the image.").setEphemeral(true).queue()
@@ -50,7 +43,7 @@ class AsciifyCommand(data: Data?) : LBCommand(data) {
         }
 
         event.deferReply().queue()
-
+        
         try {
             attachment.proxy.download().get().use { imageStream ->
                 val image: BufferedImage = downscale(ImageIO.read(imageStream), argWidth, argHeight)

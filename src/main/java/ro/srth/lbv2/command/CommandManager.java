@@ -73,7 +73,7 @@ public class CommandManager {
         SlashCommandData slashCmd = data.toSlashCommand();
 
         command.editCommand().apply(slashCmd).queue(
-                (suc) -> {},
+                (suc) -> Bot.log.info("Upserted command {}", suc.getName()),
                 (fail) -> Bot.log.error("Failed to edit command {}: {}", id, fail.getMessage())
         );
     }
