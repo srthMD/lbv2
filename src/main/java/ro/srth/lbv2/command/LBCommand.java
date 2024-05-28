@@ -44,7 +44,7 @@ public abstract class LBCommand extends ListenerAdapter {
                 event.reply("An unknown error occurred.").setEphemeral(true).queue();
             }
 
-            Bot.log.error("{} running command {}: {}", e.getClass().getCanonicalName(), event.getFullCommandName(), e.getMessage());
+            Bot.log.error("{} running command {}: {} \n{}", e.getClass().getCanonicalName(), event.getFullCommandName(), e.getMessage(), e.getStackTrace());
         }
     }
 
