@@ -13,11 +13,12 @@ public class InputHandler {
 
     public static void initHandler(){
         new Thread(() -> {
+            var fileCache = Bot.getFileCache();
             while(true){
                 var input = in.nextLine();
 
                 if(input.equals("quit")){
-                    Bot.getBot().shutdown();
+                    Bot.shutdown();
                     System.exit(0);
                 }
 
@@ -28,7 +29,9 @@ public class InputHandler {
                         System.out.println("Total: " + runtime.totalMemory()/1024 + "KB");
                         System.out.println("Free: " + runtime.freeMemory()/1024 + "KB");
                         System.out.println("Processors: " + runtime.availableProcessors());
+                        System.out.println("FileCache size: " + fileCache.size());
                     }
+                    case "clrcache" -> fileCache.flush();
                     case "register" -> CommandManager.registerCommands(true);
                     case "upsert" -> {
                         String[] args = input.split(" ");

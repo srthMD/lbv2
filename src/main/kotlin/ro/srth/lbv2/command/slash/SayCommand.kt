@@ -19,7 +19,7 @@ class SayCommand(data: Data?) : LBCommand(data) {
 
         if (attachment != null) {
             val stream = attachment.proxy.download().get()
-            val rand = Bot.rand().nextLong();
+            val rand = Bot.rand().nextLong()
             interaction.addFiles(FileUpload.fromData(stream, "attachment${rand}.${attachment.fileExtension}"))
         } else if (str.isEmpty()) {
             event.reply("You must send atleast a message or atatchment").setEphemeral(true).queue()

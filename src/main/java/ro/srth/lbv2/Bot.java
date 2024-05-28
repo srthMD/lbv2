@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ro.srth.lbv2.cache.FileCache;
 import ro.srth.lbv2.command.CommandManager;
 import ro.srth.lbv2.input.InputHandler;
 
@@ -17,10 +18,11 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
-public class Bot {
+public final class Bot {
     private static JDA bot;
     private static FFmpeg FFMPEG;
     private static final Random rand = new Random(System.currentTimeMillis());
+    private static final FileCache fileCache = new FileCache();
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
@@ -73,6 +75,11 @@ public class Bot {
         return token;
     }
 
+    public static void shutdown() {
+        fileCache.flush();
+        bot.shutdown();
+    }
+
     public static JDA getBot() {
         return bot;
     }
@@ -83,6 +90,10 @@ public class Bot {
 
     public static Random rand(){
         return rand;
+    }
+
+    public static FileCache getFileCache() {
+        return fileCache;
     }
 }
 

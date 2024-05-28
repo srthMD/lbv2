@@ -14,6 +14,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
 
     companion object {
         val ffmpeg: FFmpeg = Bot.getFFMPEG()
+        val fileCache = Bot.getFileCache()
     }
 
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
@@ -39,7 +40,25 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
 
         event.deferReply().queue()
 
-        val vidFile = video.proxy.downloadToFile(File.createTempFile("lbvid", ".${video.fileExtension}")).join()
+        val vidFile: File?
+
+        val possibleIdentifier = video.fileName + video.size
+        if (fileCache.exists(possibleIdentifier)) {
+            vidFile = fileCache.get(possibleIdentifier)
+
+            if (vidFile == null) {
+                event.hook.sendMessage("Something went wrong getting the file (cache).").setEphemeral(true).queue()
+                return
+            }
+        } else {
+            try {
+                vidFile = video.proxy.downloadToFile(File.createTempFile("lbvid", ".${video.fileExtension}")).join()
+                fileCache.put(possibleIdentifier, vidFile)
+            } catch (e: Exception) {
+                event.hook.sendMessage("Something went wrong getting the file (download).").setEphemeral(true).queue()
+                return
+            }
+        }
 
         if (width == null) {
             width = video.width
@@ -49,7 +68,8 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
             height = video.height
         }
 
-        val compressed = compressVideo(vidFile, video.fileExtension!!, width, height, bitrate, fps, audioBitrate, vf, af)
+        val compressed =
+            compressVideo(vidFile!!, video.fileExtension!!, width, height, bitrate, fps, audioBitrate, vf, af)
 
         event.hook.sendFiles(FileUpload.fromData(compressed)).complete()
 
