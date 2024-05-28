@@ -3,6 +3,7 @@ package ro.srth.lbv2.command.slash
 import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.builder.FFmpegBuilder
+import net.dv8tion.jda.api.entities.Message.Attachment
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.utils.FileUpload
@@ -18,7 +19,43 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
     }
 
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
+        when (event.subcommandName) {
+            "video" -> handleVideo(event)
+            "audio" -> handleAudio(event)
+        }
         handleVideo(event)
+    }
+
+    private fun handleAudio(event: SlashCommandInteractionEvent) {
+        val audio = event.getOption("audio") { obj: OptionMapping -> obj.asAttachment }
+
+        val audioBitrate = event.getOption("audiobitrate", 16000, OptionMapping::getAsInt)
+        val audioSampleRate = event.getOption("audiosamplerate", 16000, OptionMapping::getAsInt)
+        val volume = event.getOption("volume", 1, OptionMapping::getAsInt)
+        val speed = event.getOption("speed", 1.0, OptionMapping::getAsDouble)
+        val af = event.getOption("af", "", OptionMapping::getAsString)
+
+        if (!audio!!.contentType.equals("audio")) {
+            event.reply("Attachment provided is not a valid audio file").setEphemeral(true).queue()
+            return
+        }
+
+        event.deferReply().queue()
+
+        val audioFile = getFile(audio)
+
+        if (audioFile == null) {
+            event.hook.sendMessage("Something went wrong getting the attachment.").setEphemeral(true).queue()
+            return
+        }
+
+        val compressed =
+            compressAudio(audioFile, audio.fileExtension!!, audioBitrate, audioSampleRate, volume, speed, af)
+
+        event.hook.sendFiles(FileUpload.fromData(compressed)).complete()
+
+        compressed.deleteOnExit()
+        audioFile.deleteOnExit()
     }
 
     private fun handleVideo(event: SlashCommandInteractionEvent) {
@@ -40,24 +77,11 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
 
         event.deferReply().queue()
 
-        val vidFile: File?
+        val vidFile = getFile(video)
 
-        val possibleIdentifier = video.fileName + video.size
-        if (fileCache.exists(possibleIdentifier)) {
-            vidFile = fileCache.get(possibleIdentifier)
-
-            if (vidFile == null) {
-                event.hook.sendMessage("Something went wrong getting the file (cache).").setEphemeral(true).queue()
-                return
-            }
-        } else {
-            try {
-                vidFile = video.proxy.downloadToFile(File.createTempFile("lbvid", ".${video.fileExtension}")).join()
-                fileCache.put(possibleIdentifier, vidFile)
-            } catch (e: Exception) {
-                event.hook.sendMessage("Something went wrong getting the file (download).").setEphemeral(true).queue()
-                return
-            }
+        if (vidFile == null) {
+            event.hook.sendMessage("Something went wrong getting the attachment.").setEphemeral(true).queue()
+            return
         }
 
         if (width == null) {
@@ -69,12 +93,34 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         }
 
         val compressed =
-            compressVideo(vidFile!!, video.fileExtension!!, width, height, bitrate, fps, audioBitrate, vf, af)
+            compressVideo(vidFile, video.fileExtension!!, width, height, bitrate, fps, audioBitrate, vf, af)
 
         event.hook.sendFiles(FileUpload.fromData(compressed)).complete()
 
         compressed.deleteOnExit()
         vidFile.deleteOnExit()
+    }
+
+    private fun getFile(att: Attachment): File? {
+        val file: File?
+
+        val possibleIdentifier = att.fileName + att.size
+        if (fileCache.exists(possibleIdentifier)) {
+            file = fileCache.get(possibleIdentifier)
+
+            if (file == null) {
+                return null
+            }
+        } else {
+            try {
+                file = att.proxy.downloadToFile(File.createTempFile("lb", ".${att.fileExtension}")).join()
+                fileCache.put(possibleIdentifier, file)
+            } catch (e: Exception) {
+                return null
+            }
+        }
+
+        return file
     }
 
     private fun compressVideo(vid: File, extension: String, width: Int, height: Int, bitrate: Int, fps: Int, audioBitrate: Int, vf: String, af: String): File {
@@ -96,6 +142,38 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
 
         if(vf.isNotEmpty()){
             builder.setVideoFilter(vf)
+        }
+
+        val exec = FFmpegExecutor(ffmpeg)
+
+        exec.createJob(builder).run()
+
+        return out
+    }
+
+    private fun compressAudio(
+        audio: File,
+        extension: String,
+        bitrate: Int,
+        sampling: Int,
+        volume: Int,
+        speed: Double,
+        af: String
+    ): File {
+        val builder = FFmpegBuilder()
+
+        val out = File.createTempFile("lbaudiojob", ".$extension")
+
+        builder.setInput(audio.path)
+            .overrideOutputFiles(true)
+            .addOutput(out.path)
+            .setAudioBitRate(bitrate.toLong())
+            .setAudioSampleRate(sampling)
+            //overridden if af isn't blank
+            .setAudioFilter("volume=$volume,atempo=$speed")
+
+        if (af.isNotEmpty()) {
+            builder.setAudioFilter(af)
         }
 
         val exec = FFmpegExecutor(ffmpeg)

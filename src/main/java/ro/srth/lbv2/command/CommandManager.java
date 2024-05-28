@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -100,9 +101,9 @@ public class CommandManager {
         }
 
         if(commandData == null){
+            Bot.log.error("Failed to load commands.");
             return;
         }
-
 
         for (LBCommand.Data data : commandData) {
             if(!data.shouldRegister()){
@@ -235,8 +236,40 @@ public class CommandManager {
         String guildId = getGuildId(jsonObj);
         Permission[] permissions = getPermissions(jsonObj);
         OptionData[] optionData = getOptionData(jsonObj);
+        SubcommandData[] subCommands = getSubcommandData(jsonObj);
 
-        return new LBCommand.Data(name, desc, register, backend, guildId, optionData, permissions, null);
+        return new LBCommand.Data(name, desc, register, backend, guildId, optionData, permissions, subCommands);
+    }
+
+    @Nullable
+    private static SubcommandData[] getSubcommandData(@NotNull JSONObject obj) {
+        JSONArray subs;
+
+        try {
+            subs = obj.getJSONArray("subCmds");
+        } catch (JSONException e) {
+            return null;
+        }
+
+        SubcommandData[] subCommands = new SubcommandData[subs.length()];
+
+        for (int i = 0; i < subs.length(); i++) {
+            JSONObject sub = subs.getJSONObject(i);
+            try {
+                String name = sub.getString("name");
+                String description = sub.getString("description");
+
+                var data = getOptionData(sub);
+
+                SubcommandData dat = new SubcommandData(name, description).addOptions(data);
+
+                subCommands[i] = dat;
+            } catch (JSONException e) {
+                Bot.log.error("Unknown JSONException getting option data: {}\n{}", e.getMessage(), Arrays.toString(e.getStackTrace()));
+            }
+        }
+
+        return subCommands;
     }
 
     @Nullable
@@ -265,14 +298,13 @@ public class CommandManager {
                 JSONObject range = option.optJSONObject("ranges");
                 JSONArray choices = option.optJSONArray("choices");
 
-
                 OptionData dat = new OptionData(optionType, name, description, required);
 
                 setRanges(range, dat);
                 setChoices(choices, dat);
 
                 data[i] = dat;
-            }catch (JSONException e){
+            } catch (JSONException e) {
                 Bot.log.error("Unknown JSONException getting option data: {}\n{}", e.getMessage(), Arrays.toString(e.getStackTrace()));
             }
         }
