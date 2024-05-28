@@ -33,6 +33,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         val audioSampleRate = event.getOption("audiosamplerate", 16000, OptionMapping::getAsInt)
         val volume = event.getOption("volume", 1, OptionMapping::getAsInt)
         val speed = event.getOption("speed", 1.0, OptionMapping::getAsDouble)
+        val pitch = event.getOption("pitch", 1.0, OptionMapping::getAsDouble)
         val af = event.getOption("af", "", OptionMapping::getAsString)
 
         if (!audio!!.contentType!!.contains("audio")) {
@@ -50,7 +51,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         }
 
         val compressed =
-            compressAudio(audioFile, audio.fileExtension!!, audioBitrate, audioSampleRate, volume, speed, af)
+            compressAudio(audioFile, audio.fileExtension!!, audioBitrate, audioSampleRate, volume, speed, pitch, af)
 
         event.hook.sendFiles(FileUpload.fromData(compressed)).complete()
 
@@ -145,9 +146,9 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
             builder.setVideoFilter(vf)
         }
 
-        val exec = FFmpegExecutor(ffmpeg)
-
-        exec.createJob(builder).run()
+        FFmpegExecutor(ffmpeg).also {
+            it.createJob(builder).run()
+        }
 
         return out
     }
@@ -159,6 +160,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         sampling: Int,
         volume: Int,
         speed: Double,
+        pitch: Double,
         af: String
     ): File {
         val builder = FFmpegBuilder()
@@ -170,16 +172,16 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
             .addOutput(out.path)
             .setAudioBitRate(bitrate.toLong())
             .setAudioSampleRate(sampling)
-            //overridden if af isn't blank
-            .setAudioFilter("volume=$volume,atempo=$speed")
 
-        if (af.isNotEmpty()) {
-            builder.setAudioFilter(af)
+        builder.setAudioFilter(
+            af.ifEmpty {
+                "volume=$volume,atempo=$speed,rubberband=pitch=$pitch"
+            }
+        )
+
+        FFmpegExecutor(ffmpeg).also {
+            it.createJob(builder).run()
         }
-
-        val exec = FFmpegExecutor(ffmpeg)
-
-        exec.createJob(builder).run()
 
         return out
     }
