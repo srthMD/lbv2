@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.utils.FileUpload
 import ro.srth.lbv2.Bot
+import ro.srth.lbv2.cache.FileCache
 import ro.srth.lbv2.command.LBCommand
 import java.io.File
 
@@ -15,7 +16,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
 
     companion object {
         val ffmpeg: FFmpeg = Bot.getFFMPEG()
-        val fileCache = Bot.getFileCache()
+        val fileCache: FileCache = Bot.getFileCache()
     }
 
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
@@ -23,11 +24,10 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
             "video" -> handleVideo(event)
             "audio" -> handleAudio(event)
         }
-        handleVideo(event)
     }
 
     private fun handleAudio(event: SlashCommandInteractionEvent) {
-        val audio = event.getOption("audio") { obj: OptionMapping -> obj.asAttachment }
+        val audio = event.getOption("attachment") { obj: OptionMapping -> obj.asAttachment }
 
         val audioBitrate = event.getOption("audiobitrate", 16000, OptionMapping::getAsInt)
         val audioSampleRate = event.getOption("audiosamplerate", 16000, OptionMapping::getAsInt)
@@ -35,7 +35,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
         val speed = event.getOption("speed", 1.0, OptionMapping::getAsDouble)
         val af = event.getOption("af", "", OptionMapping::getAsString)
 
-        if (!audio!!.contentType.equals("audio")) {
+        if (!audio!!.contentType!!.contains("audio")) {
             event.reply("Attachment provided is not a valid audio file").setEphemeral(true).queue()
             return
         }
@@ -59,7 +59,7 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
     }
 
     private fun handleVideo(event: SlashCommandInteractionEvent) {
-        val video = event.getOption("video") { obj: OptionMapping -> obj.asAttachment }
+        val video = event.getOption("attachment") { obj: OptionMapping -> obj.asAttachment }
 
         var width = event.getOption("width", null, OptionMapping::getAsInt)
         var height = event.getOption("height", null, OptionMapping::getAsInt)
@@ -113,9 +113,10 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
             }
         } else {
             try {
-                file = att.proxy.downloadToFile(File.createTempFile("lb", ".${att.fileExtension}")).join()
+                file = att.proxy.downloadToFile(File.createTempFile("lbshitify", ".${att.fileExtension}")).get()
                 fileCache.put(possibleIdentifier, file)
             } catch (e: Exception) {
+                Bot.log.error("Error downloading file: $e")
                 return null
             }
         }
