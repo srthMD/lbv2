@@ -12,22 +12,24 @@ import java.io.IOException
 import java.util.concurrent.ExecutionException
 import javax.imageio.ImageIO
 
-class AsciifyCommand(data: Data?) : LBCommand(data) {
 
-    companion object {
-        const val CHARS = " .:-=+*#%@"
-        const val REVERSED = "@%#*+=-:. "
-        const val LENGTH = CHARS.length
+class AsciifyCommand(data: Data) : LBCommand(data) {
+    private val charSet: String
+    private val defaultWidth: Int
+    private val defaultHeight: Int
 
-        const val DEFAULTWIDTH = 100
-        const val DEFAULTHEIGHT = 50
+    init {
+        val obj = data.attachedData
+        this.charSet = obj!!.getString("charSet")
+        this.defaultWidth = obj.getInt("defaultWidth")
+        this.defaultHeight = obj.getInt("defaultHeight")
     }
 
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
         val mapping = event.getOption("image")
 
-        val argWidth = event.getOption("width", DEFAULTWIDTH, OptionMapping::getAsInt)
-        val argHeight = event.getOption("height", DEFAULTHEIGHT, OptionMapping::getAsInt)
+        val argWidth = event.getOption("width", defaultWidth, OptionMapping::getAsInt)
+        val argHeight = event.getOption("height", defaultHeight, OptionMapping::getAsInt)
         val reversed = event.getOption("reversed", false, OptionMapping::getAsBoolean)
 
         if (mapping == null) {
@@ -94,9 +96,9 @@ class AsciifyCommand(data: Data?) : LBCommand(data) {
 
     private fun grayscaleToChar(avg: Int, reversed: Boolean): Char {
         return if (reversed) {
-            REVERSED[(LENGTH - 1) * avg / 255]
+            charSet.reversed()[(charSet.length - 1) * avg / 255]
         } else {
-            CHARS[(LENGTH - 1) * avg / 255]
+            charSet[(charSet.length - 1) * avg / 255]
         }
     }
 

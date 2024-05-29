@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import ro.srth.lbv2.Bot;
 
 /**
@@ -59,6 +60,7 @@ public abstract class LBCommand extends ListenerAdapter {
      * @param options The options for this command. (optional)
      * @param permissions The required server {@link Permission permissions} for this command. (optional)
      * @param subCommands The sub commands of this command, with its options attached. (optional)
+     * @param attachedData Any attached data that the command may use internally in its handler (optional)
      */
     public record Data(
             String name,
@@ -68,7 +70,8 @@ public abstract class LBCommand extends ListenerAdapter {
             @Nullable String guildId,
             @Nullable OptionData[] options,
             @Nullable Permission[] permissions,
-            @Nullable SubcommandData[] subCommands)
+            @Nullable SubcommandData[] subCommands,
+            @Nullable JSONObject attachedData)
     {
         public SlashCommandData toSlashCommand(){
             SlashCommandData cmdData = Commands.slash(this.name(), this.description());

@@ -237,8 +237,9 @@ public class CommandManager {
         Permission[] permissions = getPermissions(jsonObj);
         OptionData[] optionData = getOptionData(jsonObj);
         SubcommandData[] subCommands = getSubcommandData(jsonObj);
+        JSONObject attachedData = jsonObj.optJSONObject("attachedData");
 
-        return new LBCommand.Data(name, desc, register, backend, guildId, optionData, permissions, subCommands);
+        return new LBCommand.Data(name, desc, register, backend, guildId, optionData, permissions, subCommands, attachedData);
     }
 
     @Nullable

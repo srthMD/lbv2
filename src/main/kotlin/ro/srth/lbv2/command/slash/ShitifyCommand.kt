@@ -12,9 +12,22 @@ import ro.srth.lbv2.cache.FileCache
 import ro.srth.lbv2.command.LBCommand
 import java.io.File
 
-class ShitifyCommand(data: Data?) : LBCommand(data) {
+class ShitifyCommand(data: Data) : LBCommand(data) {
 
-    companion object {
+    private val defaultBitrate: Int
+    private val defaultAudioBitrate: Int
+    private val defaultSamplingRate: Int
+    private val defaultFps: Int
+
+    init {
+        val obj = data.attachedData
+        this.defaultBitrate = obj!!.getInt("defaultBitrate")
+        this.defaultAudioBitrate = obj.getInt("defaultAudioBitrate")
+        this.defaultSamplingRate = obj.getInt("defaultSamplingRate")
+        this.defaultFps = obj.getInt("defaultFps")
+    }
+
+    private companion object {
         val ffmpeg: FFmpeg = Bot.getFFMPEG()
         val fileCache: FileCache = Bot.getFileCache()
     }
@@ -29,8 +42,8 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
     private fun handleAudio(event: SlashCommandInteractionEvent) {
         val audio = event.getOption("attachment") { obj: OptionMapping -> obj.asAttachment }
 
-        val audioBitrate = event.getOption("audiobitrate", 16000, OptionMapping::getAsInt)
-        val audioSampleRate = event.getOption("audiosamplerate", 16000, OptionMapping::getAsInt)
+        val audioBitrate = event.getOption("audiobitrate", defaultAudioBitrate, OptionMapping::getAsInt)
+        val audioSampleRate = event.getOption("audiosamplerate", defaultSamplingRate, OptionMapping::getAsInt)
         val volume = event.getOption("volume", 1, OptionMapping::getAsInt)
         val speed = event.getOption("speed", 1.0, OptionMapping::getAsDouble)
         val pitch = event.getOption("pitch", 1.0, OptionMapping::getAsDouble)
@@ -64,9 +77,9 @@ class ShitifyCommand(data: Data?) : LBCommand(data) {
 
         var width = event.getOption("width", null, OptionMapping::getAsInt)
         var height = event.getOption("height", null, OptionMapping::getAsInt)
-        val bitrate = event.getOption("bitrate", 8000, OptionMapping::getAsInt)
-        val audioBitrate = event.getOption("audiobitrate", 16000, OptionMapping::getAsInt)
-        val fps = event.getOption("fps", 5, OptionMapping::getAsInt)
+        val bitrate = event.getOption("bitrate", defaultBitrate, OptionMapping::getAsInt)
+        val audioBitrate = event.getOption("audiobitrate", defaultAudioBitrate, OptionMapping::getAsInt)
+        val fps = event.getOption("fps", defaultFps, OptionMapping::getAsInt)
 
         val vf = event.getOption("vf", "", OptionMapping::getAsString)
         val af = event.getOption("af", "",  OptionMapping::getAsString)
