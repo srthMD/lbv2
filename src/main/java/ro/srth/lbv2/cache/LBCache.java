@@ -11,5 +11,7 @@ public interface LBCache<K, V> {
 
     void flush();
 
+    boolean exists(final K key);
+
     long size();
 }

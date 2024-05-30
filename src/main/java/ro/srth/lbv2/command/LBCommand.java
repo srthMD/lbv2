@@ -20,7 +20,7 @@ import ro.srth.lbv2.Bot;
 public abstract class LBCommand extends ListenerAdapter {
     private final Data data;
 
-    public LBCommand(Data data) {
+    public LBCommand(@NotNull Data data) {
         this.data = data;
     }
 

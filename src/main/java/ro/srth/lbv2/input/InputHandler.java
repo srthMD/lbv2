@@ -10,6 +10,7 @@ import java.util.Scanner;
 /**
  * Very simple command handler.
  */
+@SuppressWarnings(value = "unused")
 public class InputHandler {
     private static final Scanner in = new Scanner(System.in);
 
@@ -18,12 +19,12 @@ public class InputHandler {
     public static void initHandler(){
         new Thread(() -> {
             while(true){
-                var input = in.nextLine();
+                var input = in.nextLine().split(" ");
 
                 try {
-                    var method = InputHandler.class.getDeclaredMethod(input, String[].class);
+                    var method = InputHandler.class.getDeclaredMethod(input[0], String[].class);
 
-                    method.invoke(null, (Object) input.split(" "));
+                    method.invoke(null, (Object) input);
                 } catch (NoSuchMethodException e) {
                     System.out.println("Command does not exist.");
                 } catch (InvocationTargetException | IllegalAccessException e) {

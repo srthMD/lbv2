@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.sharding.ShardManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -19,10 +20,7 @@ import ro.srth.lbv2.exception.InvalidCommandClassException;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,9 +30,13 @@ import java.util.stream.Collectors;
  */
 public class CommandManager {
 
-    private static final JDA bot = Bot.getBot();
+    private static final ShardManager bot = Bot.getBot();
+
+    private static final JDA first = bot.getShards().getFirst();
 
     private static final File CMDPATH = new File("cmds");
+
+    private static final Set<LBCommand> handlers = new HashSet<>();
 
     /**
      * (Unimplemented)
@@ -47,7 +49,7 @@ public class CommandManager {
      * @param id The ID of the command represented in the discord client.
      */
     public static void upsertCommand(String id) {
-        Command command = bot.retrieveCommandById(id).onErrorMap(throwable -> null).complete();
+        Command command = first.retrieveCommandById(id).onErrorMap(throwable -> null).complete();
 
         if (command == null){
             Bot.log.error("Command id {} does not exist.", id);
@@ -74,7 +76,21 @@ public class CommandManager {
         SlashCommandData slashCmd = data.toSlashCommand();
 
         command.editCommand().apply(slashCmd).queue(
-                (suc) -> Bot.log.info("Upserted command {}", suc.getName()),
+                (suc) -> {
+                    var cmd = handlers.stream().filter(lbCommand -> lbCommand.getData().name().equals(slashCmd.getName())).findFirst();
+                    if (cmd.isPresent()) {
+                        var c = cmd.get();
+                        handlers.remove(c);
+                        bot.removeEventListener(c);
+
+                        var newCmd = safeNewInstance(c.getData());
+                        bot.addEventListener(newCmd);
+
+                        Bot.log.info("Upserted command {}", suc.getName());
+                    } else {
+                        Bot.log.warn("Upserted command {}, but failed to re-instantiate handler.", suc.getName());
+                    }
+                },
                 (fail) -> Bot.log.error("Failed to edit command {}: {}", id, fail.getMessage())
         );
     }
@@ -85,8 +101,6 @@ public class CommandManager {
      * @param coldstart Decides whether to register commands to discord or not.
      */
     public static void registerCommands(boolean coldstart) {
-        JDA bot = Bot.getBot();
-
         if(coldstart){
             wipeUselessCommands();
         }
@@ -110,7 +124,7 @@ public class CommandManager {
                 continue;
             }
 
-            LBCommand command = safeNewInstance(data.backendClass(), data);
+            LBCommand command = safeNewInstance(data);
 
             if(command == null){
                 Bot.log.warn("Skipping command {} because safeNewInstance returned null.", data.name());
@@ -123,9 +137,10 @@ public class CommandManager {
 
             if(guildId == null){
                 if(coldstart){
-                    bot.upsertCommand(cmdData).queue(
+                    first.upsertCommand(cmdData).queue(
                             (suc) -> {
                                 bot.addEventListener(command);
+                                handlers.add(command);
                                 Bot.log.info("Registered global command {}", data.name());
                             },
                             (err) -> Bot.log.warn("Failed to register global command {}: {}", data.name(), err.getMessage())
@@ -145,6 +160,7 @@ public class CommandManager {
                     g.upsertCommand(cmdData).queue(
                             (suc) -> {
                                 bot.addEventListener(command);
+                                handlers.add(command);
                                 Bot.log.info("Registered guild command {}", data.name());
                             },
                             (err) -> Bot.log.warn("Failed to register guild command {}: {}", data.name(), err.getMessage())
@@ -156,9 +172,15 @@ public class CommandManager {
         }
     }
 
+    @Nullable
+    public static LBCommand getCommandHandler(String name) {
+        var cmd = handlers.stream().filter(lbCommand -> lbCommand.getData().name().equals(name)).findFirst();
+
+        return cmd.orElse(null);
+    }
 
     private static void wipeUselessCommands(){
-        for (Command command : bot.retrieveCommands().complete()) {
+        for (Command command : first.retrieveCommands().complete()) {
             File f = jsonFromName(command.getName());
 
             if(f == null){
@@ -452,13 +474,14 @@ public class CommandManager {
 
 
     @Nullable
-    private static LBCommand safeNewInstance(Class<? extends LBCommand> command, LBCommand.Data dat){
-        try {
-            Constructor<? extends LBCommand> c = command.getConstructor(LBCommand.Data.class);
+    private static LBCommand safeNewInstance(LBCommand.Data dat) {
+        var clazz = dat.backendClass();
 
+        try {
+            Constructor<? extends LBCommand> c = clazz.getConstructor(LBCommand.Data.class);
             return c.newInstance(dat);
         } catch (NoSuchMethodException e) {
-            Bot.log.error("No such constructor for class {}", command.getCanonicalName());
+            Bot.log.error("No such constructor for class {}", clazz.getCanonicalName());
             return null;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
             Bot.log.error("{}: {}", e.getClass().getCanonicalName(), e.getMessage());

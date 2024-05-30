@@ -2,10 +2,12 @@ package ro.srth.lbv2;
 
 import net.bramp.ffmpeg.FFmpeg;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
+import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.srth.lbv2.cache.FileCache;
@@ -19,10 +21,11 @@ import java.util.Random;
 import java.util.Scanner;
 
 public final class Bot {
-    private static JDA bot;
-    private static FFmpeg FFMPEG;
+    private static final OkHttpClient client = new OkHttpClient();
+    private static ShardManager bot = null;
     private static final Random rand = new Random(System.currentTimeMillis());
     private static final FileCache fileCache = new FileCache();
+    private static FFmpeg FFMPEG = null;
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
@@ -47,7 +50,7 @@ public final class Bot {
 
         FFMPEG = new FFmpeg("ffmpeg/bin/ffmpeg.exe");
 
-        JDABuilder builder = JDABuilder.createLight(token);
+        var builder = DefaultShardManagerBuilder.createLight(token);
         builder.setLargeThreshold(100)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
                 .enableCache(CacheFlag.VOICE_STATE)
@@ -57,7 +60,9 @@ public final class Bot {
         bot = builder.build();
 
         try {
-            bot.awaitReady();
+            for (JDA shard : bot.getShards()) {
+                shard.awaitReady();
+            }
         } catch (InterruptedException e) {
             log.warn("Await ready interrupted: {}", e.getMessage());
         }
@@ -80,7 +85,7 @@ public final class Bot {
         bot.shutdown();
     }
 
-    public static JDA getBot() {
+    public static ShardManager getBot() {
         return bot;
     }
 
@@ -94,6 +99,10 @@ public final class Bot {
 
     public static FileCache getFileCache() {
         return fileCache;
+    }
+
+    public static OkHttpClient getClient() {
+        return client;
     }
 }
 

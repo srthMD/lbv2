@@ -12,6 +12,7 @@ import ro.srth.lbv2.cache.FileCache
 import ro.srth.lbv2.command.LBCommand
 import java.io.File
 
+@Suppress("unused")
 class ShitifyCommand(data: Data) : LBCommand(data) {
 
     private val defaultBitrate: Int

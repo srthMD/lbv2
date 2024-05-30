@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException
 import javax.imageio.ImageIO
 
 
+@Suppress("unused")
 class AsciifyCommand(data: Data) : LBCommand(data) {
     private val charSet: String
     private val defaultWidth: Int

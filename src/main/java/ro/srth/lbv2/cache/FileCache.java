@@ -40,10 +40,12 @@ public final class FileCache implements LBCache<String, File> {
         }
     }
 
+    @Override
     public String hash(final String key) {
         return new String(digest.digest(key.getBytes()));
     }
 
+    @Override
     public void put(final String key, final File file) {
         fileCache.put(hash(key), file);
     }
@@ -58,10 +60,7 @@ public final class FileCache implements LBCache<String, File> {
         fileCache.invalidate(hash(key));
     }
 
-    public boolean exists(final String key) {
-        return fileCache.asMap().containsKey(hash(key));
-    }
-
+    @Override
     public void flush() {
         fileCache.invalidateAll();
     }
@@ -69,5 +68,10 @@ public final class FileCache implements LBCache<String, File> {
     @Override
     public long size() {
         return fileCache.estimatedSize();
+    }
+
+    @Override
+    public boolean exists(final String key) {
+        return fileCache.asMap().containsKey(hash(key));
     }
 }

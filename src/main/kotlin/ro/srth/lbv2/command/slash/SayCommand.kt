@@ -6,8 +6,8 @@ import net.dv8tion.jda.api.utils.FileUpload
 import ro.srth.lbv2.Bot
 import ro.srth.lbv2.command.LBCommand
 
+@Suppress("unused")
 class SayCommand(data: Data) : LBCommand(data) {
-
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
         val str = event.getOption("msg", "", OptionMapping::getAsString)
         val attachment = event.getOption("attachment", OptionMapping::getAsAttachment)
