@@ -26,6 +26,7 @@ public final class Bot {
     private static final Random rand = new Random(System.currentTimeMillis());
     private static final FileCache fileCache = new FileCache();
     private static FFmpeg FFMPEG = null;
+    private static final Thread inputHandler = InputHandler.initHandler();
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
@@ -68,7 +69,6 @@ public final class Bot {
         }
 
         CommandManager.registerCommands(coldstart);
-        InputHandler.initHandler();
     }
 
     private static String getToken() throws FileNotFoundException {
@@ -81,6 +81,7 @@ public final class Bot {
     }
 
     public static void shutdown() {
+        inputHandler.interrupt();
         fileCache.flush();
         bot.shutdown();
     }

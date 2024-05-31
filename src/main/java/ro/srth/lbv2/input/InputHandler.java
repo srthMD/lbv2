@@ -16,8 +16,8 @@ public class InputHandler {
 
     private static final FileCache fileCache = Bot.getFileCache();
 
-    public static void initHandler(){
-        new Thread(() -> {
+    public static Thread initHandler() {
+        Thread t = new Thread(() -> {
             while(true){
                 var input = in.nextLine().split(" ");
 
@@ -31,11 +31,14 @@ public class InputHandler {
                     System.out.println("Something went wrong running the command.");
                 }
             }
-        }).start();
+        });
+        t.setDaemon(true);
+        return t;
     }
 
     private static void quit(String[] ignoredArgs) {
         Bot.log.warn("Shutting down...");
+        in.close();
         Bot.shutdown();
         System.exit(0);
     }

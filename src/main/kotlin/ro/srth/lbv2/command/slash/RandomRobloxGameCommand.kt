@@ -50,7 +50,7 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
     }
 
     private fun getRandomGame(event: SlashCommandInteractionEvent) {
-        var link = "$SIMPLEPREFIX{Bot.rand().nextLong(0, 1000000000)}"
+        var link = "$SIMPLEPREFIX${Bot.rand().nextLong(0, 1000000000)}"
 
         for (i in 0..10) {
             val request = Request.Builder()
