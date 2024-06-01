@@ -106,5 +106,3 @@ public final class Bot {
         return client;
     }
 }
-
-//Adam You Are A Fat Cunt
