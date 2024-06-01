@@ -8,7 +8,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Scanner;
 
 /**
- * Very simple command handler.
+ * Very simple command handler that allows the user to run actions
+ * via the console.
  */
 @SuppressWarnings(value = "unused")
 public class InputHandler {

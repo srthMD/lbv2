@@ -28,8 +28,11 @@ public abstract class LBCommand extends ListenerAdapter {
         return data;
     }
 
+    /**
+     * Preforms some checks and necessary work before running a slash command.
+     */
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+    public final void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         try{
             if(event.isAcknowledged()){
                 return;
@@ -49,7 +52,9 @@ public abstract class LBCommand extends ListenerAdapter {
         }
     }
 
-    //forces sub commands to implement the slash command interaction
+    /**
+     * The actual implementation of a subclass' slash command handler.
+     */
     public abstract void runSlashCommand(@NotNull SlashCommandInteractionEvent event);
 
     /**

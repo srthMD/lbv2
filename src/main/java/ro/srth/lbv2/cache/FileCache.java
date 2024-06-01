@@ -10,6 +10,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 
+/**
+ * Basic class holding a cache that stores references to files.
+ * The hashes are supposed to be generated using the file's name and size.
+ */
 public final class FileCache implements LBCache<String, File> {
     private final Cache<String, File> fileCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofMinutes(1))
