@@ -21,24 +21,19 @@ import java.util.Random;
 import java.util.Scanner;
 
 public final class Bot {
-    private static final OkHttpClient client = new OkHttpClient();
-    private static ShardManager bot = null;
-    private static final Random rand = new Random(System.currentTimeMillis());
-    private static final FileCache fileCache = new FileCache();
-    private static FFmpeg FFMPEG = null;
-    private static final Thread inputHandler = InputHandler.initHandler();
+    private static Bot instance;
+
+    private final ShardManager bot;
+    private final CommandManager commandManager;
+    private final FFmpeg FFMPEG;
+    private final OkHttpClient client = new OkHttpClient();
+    private final Random rand = new Random(System.currentTimeMillis());
+    private final FileCache fileCache;
+    private final InputHandler inputHandler;
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
-    public static void main(String[] args) throws IOException {
-        boolean coldstart = false;
-
-        if(args.length != 0){
-            if(args[0].equals("--register")){
-                coldstart = true;
-            }
-        }
-
+    public Bot(boolean coldstart) throws IOException {
         String token;
 
         try{
@@ -49,8 +44,6 @@ public final class Bot {
             System.exit(-1);
         }
 
-        FFMPEG = new FFmpeg("ffmpeg/bin/ffmpeg.exe");
-
         var builder = DefaultShardManagerBuilder.createLight(token);
         builder.setLargeThreshold(100)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS)
@@ -60,6 +53,9 @@ public final class Bot {
                 .setMemberCachePolicy(MemberCachePolicy.ALL);
         bot = builder.build();
 
+        this.FFMPEG = new FFmpeg("ffmpeg/bin/ffmpeg.exe");
+        this.fileCache = new FileCache();
+
         try {
             for (JDA shard : bot.getShards()) {
                 shard.awaitReady();
@@ -68,7 +64,23 @@ public final class Bot {
             log.warn("Await ready interrupted: {}", e.getMessage());
         }
 
-        CommandManager.registerCommands(coldstart);
+        this.inputHandler = new InputHandler();
+        this.commandManager = new CommandManager();
+        bot.addEventListener(commandManager);
+    }
+
+    public static void main(String[] args) throws IOException {
+        boolean coldstart = false;
+
+        if (args.length != 0) {
+            if (args[0].equals("--register")) {
+                coldstart = true;
+            }
+        }
+
+        instance = new Bot(coldstart);
+        instance.inputHandler.initHandler();
+        instance.commandManager.registerCommands(coldstart);
     }
 
     private static String getToken() throws FileNotFoundException {
@@ -80,29 +92,37 @@ public final class Bot {
         return token;
     }
 
-    public static void shutdown() {
-        inputHandler.interrupt();
+    public static Bot getInstance() {
+        return instance;
+    }
+
+    public void shutdown() {
+        inputHandler.getThread().interrupt();
         fileCache.flush();
         bot.shutdown();
     }
 
-    public static ShardManager getBot() {
+    public ShardManager getBot() {
         return bot;
     }
 
-    public static FFmpeg getFFMPEG() {
+    public FFmpeg getFFMPEG() {
         return FFMPEG;
     }
 
-    public static Random rand(){
+    public Random rand() {
         return rand;
     }
 
-    public static FileCache getFileCache() {
+    public FileCache getFileCache() {
         return fileCache;
     }
 
-    public static OkHttpClient getClient() {
+    public CommandManager getCommandManager() {
+        return commandManager;
+    }
+
+    public OkHttpClient getClient() {
         return client;
     }
 }

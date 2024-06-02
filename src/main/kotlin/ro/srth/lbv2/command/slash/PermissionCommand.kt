@@ -3,7 +3,6 @@ package ro.srth.lbv2.command.slash
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
-import ro.srth.lbv2.command.CommandManager
 import ro.srth.lbv2.command.LBCommand
 import java.awt.Color
 
@@ -12,7 +11,6 @@ class PermissionCommand(data: Data) : LBCommand(data) {
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
         when (event.subcommandName) {
             "view" -> showPermissions(event)
-            "override" -> overridePermissions(event)
         }
     }
 
@@ -20,7 +18,7 @@ class PermissionCommand(data: Data) : LBCommand(data) {
         val input = event.getOption("command", null, OptionMapping::getAsString)
             ?: throw NullPointerException("Input was null.")
 
-        val command: LBCommand? = CommandManager.getCommandHandler(input)
+        val command: LBCommand? = bot.commandManager.getCommandHandler(input)
 
         if (command == null) {
             event.reply("Command does not exist.").setEphemeral(true).queue()
@@ -51,9 +49,5 @@ class PermissionCommand(data: Data) : LBCommand(data) {
         embed.addField("Permissions", permsStr, false)
 
         event.replyEmbeds(embed.build()).queue()
-    }
-
-    private fun overridePermissions(event: SlashCommandInteractionEvent) {
-        TODO("Not yet implemented")
     }
 }

@@ -7,8 +7,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import ro.srth.lbv2.command.slash.SayCommand;
-
+import ro.srth.lbv2.command.slash.RandomRobloxGameCommand;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.BufferedWriter;
@@ -18,23 +17,20 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-@SuppressWarnings(value = {"unused", "ConstantValue", "UnreachableCode"})
+@SuppressWarnings("ALL")
 public class JSONGenerator {
     public static void main(String[] args) {
-        String name = "say";
-        String description = "Makes the bot say something";
-        String classPath = SayCommand.class.getName();
+        String name = "randomrobloxgame";
+        String description = "Finds a random roblox game";
+        String classPath = RandomRobloxGameCommand.class.getName();
         boolean register = true;
 
         String guildId = null;
-        Permission[] perms = {
-                Permission.ADMINISTRATOR
-        };
+        Permission[] perms = {};
         OptionData[] options = {
-                new OptionData(OptionType.STRING, "msg", "whatever you want the bot to say, put a space if you want just an attachment").setRequired(true),
-                new OptionData(OptionType.ATTACHMENT, "attachment", "the attachment you want to send"),
+                new OptionData(OptionType.STRING, "userid", "If inputted, gets a random game from the specified user")
         };
-        SubcommandData[] subCmds = null;
+        SubcommandData[] subCmds = {};
 
         JSONObject obj = new JSONObject();
 

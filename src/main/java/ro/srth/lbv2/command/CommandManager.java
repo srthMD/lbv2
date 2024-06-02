@@ -1,14 +1,14 @@
 package ro.srth.lbv2.command;
 
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.sharding.ShardManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -24,31 +24,39 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Manages registering all commands from JSON data to discord.
+ * Manages registration of commands from JSON data to discord.
  * <br>
  * After logon, the bot will usually call {@link #registerCommands(boolean) registerCommamnds} first.
  */
-public class CommandManager {
-
-    private static final ShardManager bot = Bot.getBot();
-
-    private static final JDA first = bot.getShards().getFirst();
-
+public class CommandManager extends ListenerAdapter {
     private static final File CMDPATH = new File("cmds");
 
-    private static final Set<LBCommand> handlers = new HashSet<>();
+    private final Map<String, LBCommand> handlers = new HashMap<>();
+
+    @Override
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+        var name = event.getName();
+
+        var cmd = handlers.get(name);
+
+        if (cmd == null) {
+            return;
+        }
+
+        cmd.onSlashCommandInteraction(event);
+    }
 
     /**
-     * (Unimplemented)
-     * <br>
-     * Updates a single command in the bot, if the command is not registered in discord, an error will be logged (not thrown).
+     * Updates a single command in the bot.
+     * If the command is not registered in discord, an error will be logged (not thrown).
      * <br>
      * <br>
      * For changes to take effect, the JSON data file of the command must be replaced by its old one in the cmds directory.
      * The name of the JSON file must also be the same as the command name.
      * @param id The ID of the command represented in the discord client.
      */
-    public static void upsertCommand(String id) {
+    public void upsertCommand(String id) {
+        var first = Bot.getInstance().getBot().getShards().getFirst();
         Command command = first.retrieveCommandById(id).onErrorMap(throwable -> null).complete();
 
         if (command == null){
@@ -77,14 +85,10 @@ public class CommandManager {
 
         command.editCommand().apply(slashCmd).queue(
                 (suc) -> {
-                    var cmd = handlers.stream().filter(lbCommand -> lbCommand.getData().name().equals(slashCmd.getName())).findFirst();
-                    if (cmd.isPresent()) {
-                        var c = cmd.get();
-                        handlers.remove(c);
-                        bot.removeEventListener(c);
-
-                        var newCmd = safeNewInstance(c.getData());
-                        bot.addEventListener(newCmd);
+                    var cmd = handlers.getOrDefault(suc.getName(), null);
+                    if (cmd != null) {
+                        handlers.remove(suc.getName());
+                        var newCmd = safeNewInstance(cmd.getData());
 
                         Bot.log.info("Upserted command {}", suc.getName());
                     } else {
@@ -100,7 +104,10 @@ public class CommandManager {
      * If not starting from a cold start (determined by the --register argument), then only the event listeners will be set up.
      * @param coldstart Decides whether to register commands to discord or not.
      */
-    public static void registerCommands(boolean coldstart) {
+    public void registerCommands(boolean coldstart) {
+        var bot = Bot.getInstance().getBot();
+        var first = bot.getShards().getFirst();
+
         if(coldstart){
             wipeUselessCommands();
         }
@@ -139,14 +146,13 @@ public class CommandManager {
                 if(coldstart){
                     first.upsertCommand(cmdData).queue(
                             (suc) -> {
-                                bot.addEventListener(command);
-                                handlers.add(command);
+                                handlers.putIfAbsent(command.getData().name(), command);
                                 Bot.log.info("Registered global command {}", data.name());
                             },
                             (err) -> Bot.log.warn("Failed to register global command {}: {}", data.name(), err.getMessage())
                     );
                 } else{
-                    bot.addEventListener(command);
+                    handlers.putIfAbsent(command.getData().name(), command);
                 }
             } else{
                 if(coldstart){
@@ -159,27 +165,26 @@ public class CommandManager {
 
                     g.upsertCommand(cmdData).queue(
                             (suc) -> {
-                                bot.addEventListener(command);
-                                handlers.add(command);
+                                handlers.putIfAbsent(command.getData().name(), command);
                                 Bot.log.info("Registered guild command {}", data.name());
                             },
                             (err) -> Bot.log.warn("Failed to register guild command {}: {}", data.name(), err.getMessage())
                     );
                 } else{
-                    bot.addEventListener(command);
+                    handlers.putIfAbsent(command.getData().name(), command);
                 }
             }
         }
     }
 
     @Nullable
-    public static LBCommand getCommandHandler(String name) {
-        var cmd = handlers.stream().filter(lbCommand -> lbCommand.getData().name().equals(name)).findFirst();
-
-        return cmd.orElse(null);
+    public LBCommand getCommandHandler(String name) {
+        return handlers.getOrDefault(name, null);
     }
 
-    private static void wipeUselessCommands(){
+
+    private void wipeUselessCommands() {
+        var first = Bot.getInstance().getBot().getShards().getFirst();
         for (Command command : first.retrieveCommands().complete()) {
             File f = jsonFromName(command.getName());
 
@@ -190,7 +195,7 @@ public class CommandManager {
     }
 
 
-    private static List<LBCommand.Data> parseData() throws FileNotFoundException {
+    private List<LBCommand.Data> parseData() throws FileNotFoundException {
         List<File> jsons = getJsonFiles();
 
         if(jsons == null){
@@ -220,7 +225,7 @@ public class CommandManager {
 
 
     @NotNull
-    private static String raw(File json) throws FileNotFoundException {
+    private String raw(File json) throws FileNotFoundException {
         BufferedReader reader = new BufferedReader(new FileReader(json));
 
         //it works
@@ -236,7 +241,7 @@ public class CommandManager {
 
 
     @Nullable
-    private static LBCommand.Data fromJSON(JSONObject jsonObj) {
+    private LBCommand.Data fromJSON(JSONObject jsonObj) {
         Class<? extends LBCommand> backend;
 
         try {
@@ -265,7 +270,7 @@ public class CommandManager {
     }
 
     @Nullable
-    private static SubcommandData[] getSubcommandData(@NotNull JSONObject obj) {
+    private SubcommandData[] getSubcommandData(@NotNull JSONObject obj) {
         JSONArray subs;
 
         try {
@@ -296,7 +301,7 @@ public class CommandManager {
     }
 
     @Nullable
-    private static OptionData[] getOptionData(@NotNull JSONObject obj) {
+    private OptionData[] getOptionData(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
 
         JSONArray options;
@@ -336,7 +341,7 @@ public class CommandManager {
     }
 
     //extracted
-    private static void setRanges(JSONObject range, OptionData dat) {
+    private void setRanges(JSONObject range, OptionData dat) {
         if(range != null){
             switch (dat.getType()){
                 case INTEGER, NUMBER -> {
@@ -367,7 +372,7 @@ public class CommandManager {
         }
     }
 
-    private static void setChoices(JSONArray choices, OptionData dat) {
+    private void setChoices(JSONArray choices, OptionData dat) {
         if(!(choices == null)){
             switch (dat.getType()){
                 //i tried using Function idfk why it didnt work
@@ -406,7 +411,7 @@ public class CommandManager {
     }
 
     @Nullable
-    private static Permission[] getPermissions(@NotNull JSONObject obj) {
+    private Permission[] getPermissions(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
 
         JSONArray permissions = obj.optJSONArray("permissions");
@@ -431,7 +436,7 @@ public class CommandManager {
 
 
     @Nullable
-    private static String getGuildId(@NotNull JSONObject obj) {
+    private String getGuildId(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
 
         try{
@@ -445,7 +450,7 @@ public class CommandManager {
 
 
     @SuppressWarnings(value = "unchecked")
-    private static Class<? extends LBCommand> getBackendClass(@NotNull JSONObject obj) throws ClassNotFoundException, InvalidCommandClassException {
+    private Class<? extends LBCommand> getBackendClass(@NotNull JSONObject obj) throws ClassNotFoundException, InvalidCommandClassException {
         Objects.requireNonNull(obj);
 
         String classpath;
@@ -455,8 +460,8 @@ public class CommandManager {
         } catch (JSONException e){
             return null;
         }
-        
-        //if the json specifies a different path return null
+
+        //if the json specifies a different path, return null
         if(!classpath.startsWith("ro.srth.lbv2.command.slash")){
             throw new InvalidCommandClassException(classpath, "Improper classpath, must be child of slash package.");
         }
@@ -474,7 +479,7 @@ public class CommandManager {
 
 
     @Nullable
-    private static LBCommand safeNewInstance(LBCommand.Data dat) {
+    private LBCommand safeNewInstance(LBCommand.Data dat) {
         var clazz = dat.backendClass();
 
         try {
@@ -491,7 +496,7 @@ public class CommandManager {
 
 
     @Nullable
-    private static List<File> getJsonFiles() {
+    private List<File> getJsonFiles() {
         boolean b = doesCmdPathExist();
 
         if(!b){
@@ -518,7 +523,7 @@ public class CommandManager {
 
 
     @Nullable
-    private static File jsonFromName(String name) {
+    private File jsonFromName(String name) {
         boolean b = doesCmdPathExist();
 
         if(!b){
@@ -534,8 +539,7 @@ public class CommandManager {
         }
     }
 
-
-    private static boolean doesCmdPathExist(){
+    private boolean doesCmdPathExist() {
         if(!CMDPATH.exists()){
             Bot.log.warn("cmds folder does not exist, creating new folder...");
             boolean suc = CMDPATH.mkdir();

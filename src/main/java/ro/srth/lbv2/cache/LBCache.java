@@ -43,7 +43,7 @@ public interface LBCache<K, V> {
     boolean exists(final K key);
 
     /**
-     * @return The amount of entries within the cache.
+     * @return The number of entries within the cache.
      */
     long size();
 }

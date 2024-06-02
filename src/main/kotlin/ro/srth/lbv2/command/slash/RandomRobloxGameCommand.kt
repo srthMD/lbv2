@@ -4,12 +4,10 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import okhttp3.Request
 import org.json.JSONObject
-import ro.srth.lbv2.Bot
 import ro.srth.lbv2.command.LBCommand
 
 @Suppress("unused")
 class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
-
     private companion object {
         const val APIPREFIX = "https://games.roblox.com/v2/users/"
         const val APISUFFIX = "/games?accessFilter=2&limit=50"
@@ -31,7 +29,7 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
             .url(APIPREFIX + user + APISUFFIX)
             .build()
 
-        val call = Bot.getClient().newCall(request)
+        val call = bot.client.newCall(request)
         val response = call.execute()
 
         if (response.isSuccessful) {
@@ -39,7 +37,7 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
 
             val arr = data.getJSONArray("data")
 
-            val index = Bot.rand().nextInt(0, arr.length())
+            val index = bot.rand().nextInt(0, arr.length())
 
             val game = arr.getJSONObject(index).getJSONObject("rootPlace").getLong("id")
 
@@ -50,14 +48,14 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
     }
 
     private fun getRandomGame(event: SlashCommandInteractionEvent) {
-        var link = "$SIMPLEPREFIX${Bot.rand().nextLong(0, 1000000000)}"
+        var link = "$SIMPLEPREFIX${bot.rand().nextLong(0, 1000000000)}"
 
         for (i in 0..10) {
             val request = Request.Builder()
                 .url(link)
                 .build()
 
-            val call = Bot.getClient().newCall(request)
+            val call = bot.client.newCall(request)
             val response = call.execute()
 
             when {
@@ -66,7 +64,7 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
                     return
                 }
 
-                else -> link = "https://www.roblox.com/games/${Bot.rand().nextLong(0, 1000000000)}"
+                else -> link = "https://www.roblox.com/games/${bot.rand().nextLong(0, 1000000000)}"
             }
         }
 

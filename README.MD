@@ -8,7 +8,8 @@ attempt at a bot (static blocks).
 ### Whats Different?
 The first iteration of leilabot relied heavily on the reflections
 library to register commands, which was not optimal for startup times
-and for some reason had its own custom [implementation to handle interactions](https://github.com/srthMD/leilabot/blob/3cab69958fbe74c88368232542da282f4cb1b610/src/main/java/ro/srth/leila/command/CmdMan.java#L90)
+and also had
+an [implementation to handle interactions](https://github.com/srthMD/leilabot/blob/3cab69958fbe74c88368232542da282f4cb1b610/src/main/java/ro/srth/leila/command/CmdMan.java#L90)
 that constructed an object... every interaction? 
 <br>
 <br>
@@ -38,7 +39,7 @@ up to Java 17 (this may change later and I will forget to edit this).
 To build all you need to do is run shadowJar.
 <br>
 <br>
-Before running for the first time three things will need to be set up.
+Before running for the first time, three things will need to be set up.
 * A token.txt file containing the discord token.
 * A folder called cmds.
 * A folder called ffmpeg with an FFMPEG installation.
@@ -47,7 +48,8 @@ Before running for the first time three things will need to be set up.
 **Note that any commands without their respective JSON files will not be registered.**
 
 ### Dependencies
-As of 27.05.2024 leilabot depends on:
+
+As of 27.05.2024, leilabot depends on:
 * [JDA](https://github.com/discord-jda/JDA)
 * [Kotlin](https://kotlinlang.org/)
 * [org.json](https://mvnrepository.com/artifact/org.json/json)

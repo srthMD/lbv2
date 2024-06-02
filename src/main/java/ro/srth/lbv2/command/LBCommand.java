@@ -2,7 +2,6 @@ package ro.srth.lbv2.command;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -17,8 +16,10 @@ import ro.srth.lbv2.Bot;
  * The base class for all slash command handler classes.
  * Every command should extend this class and implement {@link #runSlashCommand(SlashCommandInteractionEvent)}.
  */
-public abstract class LBCommand extends ListenerAdapter {
+public abstract class LBCommand {
     private final Data data;
+
+    protected final Bot bot = Bot.getInstance();
 
     public LBCommand(@NotNull Data data) {
         this.data = data;
@@ -31,7 +32,6 @@ public abstract class LBCommand extends ListenerAdapter {
     /**
      * Preforms some checks and necessary work before running a slash command.
      */
-    @Override
     public final void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         try{
             if(event.isAcknowledged()){

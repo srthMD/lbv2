@@ -1,6 +1,5 @@
 package ro.srth.lbv2.command.slash
 
-import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.builder.FFmpegBuilder
 import net.dv8tion.jda.api.entities.Message.Attachment
@@ -8,7 +7,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.utils.FileUpload
 import ro.srth.lbv2.Bot
-import ro.srth.lbv2.cache.FileCache
 import ro.srth.lbv2.command.LBCommand
 import java.io.File
 
@@ -20,6 +18,9 @@ class ShitifyCommand(data: Data) : LBCommand(data) {
     private val defaultSamplingRate: Int
     private val defaultFps: Int
 
+    private val ffmpeg = bot.ffmpeg
+    private val fileCache = bot.fileCache
+
     init {
         val obj = data.attachedData
         this.defaultBitrate = obj!!.getInt("defaultBitrate")
@@ -28,10 +29,6 @@ class ShitifyCommand(data: Data) : LBCommand(data) {
         this.defaultFps = obj.getInt("defaultFps")
     }
 
-    private companion object {
-        val ffmpeg: FFmpeg = Bot.getFFMPEG()
-        val fileCache: FileCache = Bot.getFileCache()
-    }
 
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
         when (event.subcommandName) {
