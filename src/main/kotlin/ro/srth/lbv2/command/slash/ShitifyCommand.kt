@@ -1,5 +1,6 @@
 package ro.srth.lbv2.command.slash
 
+import net.bramp.ffmpeg.FFmpeg
 import net.bramp.ffmpeg.FFmpegExecutor
 import net.bramp.ffmpeg.builder.FFmpegBuilder
 import net.dv8tion.jda.api.entities.Message.Attachment
@@ -9,19 +10,27 @@ import net.dv8tion.jda.api.utils.FileUpload
 import ro.srth.lbv2.Bot
 import ro.srth.lbv2.command.LBCommand
 import java.io.File
+import java.io.IOException
 
 @Suppress("unused")
 class ShitifyCommand(data: Data) : LBCommand(data) {
-
     private val defaultBitrate: Int
     private val defaultAudioBitrate: Int
     private val defaultSamplingRate: Int
     private val defaultFps: Int
 
-    private val ffmpeg = bot.ffmpeg
+    private var ffmpeg: FFmpeg?
+
     private val fileCache = bot.fileCache
 
     init {
+        try {
+            this.ffmpeg = FFmpeg("ffmpeg/bin/ffmpeg.exe")
+        } catch (e: IOException) {
+            Bot.log.error("ShitifyCommand cant run because ffmpeg does not exist")
+            this.ffmpeg = null
+        }
+
         val obj = data.attachedData
         this.defaultBitrate = obj!!.getInt("defaultBitrate")
         this.defaultAudioBitrate = obj.getInt("defaultAudioBitrate")
@@ -31,6 +40,11 @@ class ShitifyCommand(data: Data) : LBCommand(data) {
 
 
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
+        if (ffmpeg == null) {
+            event.reply("Command can not be run at this time.").setEphemeral(true).queue()
+            return
+        }
+
         when (event.subcommandName) {
             "video" -> handleVideo(event)
             "audio" -> handleAudio(event)

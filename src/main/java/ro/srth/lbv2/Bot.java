@@ -1,6 +1,5 @@
 package ro.srth.lbv2;
 
-import net.bramp.ffmpeg.FFmpeg;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
@@ -25,7 +24,6 @@ public final class Bot {
 
     private final ShardManager bot;
     private final CommandManager commandManager;
-    private final FFmpeg FFMPEG;
     private final OkHttpClient client = new OkHttpClient();
     private final Random rand = new Random(System.currentTimeMillis());
     private final FileCache fileCache;
@@ -33,7 +31,7 @@ public final class Bot {
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
-    public Bot(boolean coldstart) throws IOException {
+    public Bot() throws IOException {
         String token;
 
         try{
@@ -53,7 +51,6 @@ public final class Bot {
                 .setMemberCachePolicy(MemberCachePolicy.ALL);
         bot = builder.build();
 
-        this.FFMPEG = new FFmpeg("ffmpeg/bin/ffmpeg.exe");
         this.fileCache = new FileCache();
 
         try {
@@ -78,7 +75,7 @@ public final class Bot {
             }
         }
 
-        instance = new Bot(coldstart);
+        instance = new Bot();
         instance.inputHandler.initHandler();
         instance.commandManager.registerCommands(coldstart);
     }
@@ -104,10 +101,6 @@ public final class Bot {
 
     public ShardManager getBot() {
         return bot;
-    }
-
-    public FFmpeg getFFMPEG() {
-        return FFMPEG;
     }
 
     public Random rand() {
