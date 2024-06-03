@@ -1,0 +1,21 @@
+{
+  "backendClass": "ro.srth.lbv2.command.slash.PermissionCommand",
+  "subCmds": [
+    {
+      "name": "view",
+      "options": [
+        {
+          "name": "command",
+          "description": "The name of the command as shown in the discord client",
+          "type": 3,
+          "required": true
+        }
+      ],
+      "description": "Shows the permissions required to run the inputted command"
+    }
+  ],
+  "permissions": [],
+  "name": "permission",
+  "description": "Display or modify permissions for a command",
+  "register": true
+}

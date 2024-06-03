@@ -1,9 +1,8 @@
-# The second coming of Leila
+# Leilabot Version 2
 
 New and hopefully not going to be abandoned version
 of leilabot, revamped from the past mistakes of my last
-attempt at a bot (static blocks). 
-
+attempt at a bot (lots of static blocks).
 
 ### Whats Different?
 The first iteration of leilabot relied heavily on the reflections
@@ -32,20 +31,41 @@ register the command, constructing a new command handler with the provided data.
 JSON files can be generated with the [JSONGenerator](https://github.com/srthMD/lbv2/blob/master/src/main/java/ro/srth/lbv2/JSONGenerator.java),
 and must be put into a folder called "cmds" in the root directory of the JAR.
 
-### Building and Running
-Although LBV2 is developed with Java 21, it will most likely be backwards compatible
-up to Java 17 (this may change later and I will forget to edit this).
-<br>
-To build all you need to do is run shadowJar.
-<br>
-<br>
-Before running for the first time, three things will need to be set up.
-* A token.txt file containing the discord token.
-* A folder called cmds.
-* A folder called ffmpeg with an FFMPEG installation.
-<br>
+### Building
 
-**Note that any commands without their respective JSON files will not be registered.**
+To build just the JAR file, all you would need to do is run the shadowJar task.
+
+```console
+.\gradlew shadowJar
+```
+
+For building an archive, run the deploy task **(this will call shadowJar)**.
+
+```console
+.\gradlew :deploy
+```
+
+### Running
+
+Before running, there are some files that the JAR will need before running.
+
+* A token.txt with your application token
+* A cmds folder containing your commands as .json files. (see the commands directory)
+* A folder named ffmpeg with a ffmpeg installation (ffmpeg/bin/ffmpeg.exe)
+
+> [!IMPORTANT]
+> <br>
+> An ffmpeg installation is not needed
+>
+if [ShitifyCommand](https://github.com/srthMD/lbv2/blob/master/src/main/kotlin/ro/srth/lbv2/command/slash/ShitifyCommand.kt)
+does not exist.
+
+> [!WARNING]
+> <br>
+> Any commands that do not have a corresponding JSON file will not be registered.
+> <br>
+> <br>
+> The same is applied for any JSON files without their respective classes.
 
 ### Dependencies
 

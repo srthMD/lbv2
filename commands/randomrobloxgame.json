@@ -1,0 +1,16 @@
+{
+  "backendClass": "ro.srth.lbv2.command.slash.RandomRobloxGameCommand",
+  "subCmds": [],
+  "permissions": [],
+  "name": "randomrobloxgame",
+  "options": [
+    {
+      "name": "userid",
+      "description": "If inputted, gets a random game from the specified user",
+      "type": 3,
+      "required": false
+    }
+  ],
+  "description": "Finds a random roblox game",
+  "register": true
+}

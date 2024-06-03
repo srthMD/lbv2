@@ -1,0 +1,23 @@
+{
+  "backendClass": "ro.srth.lbv2.command.slash.SayCommand",
+  "permissions": [
+    3
+  ],
+  "name": "say",
+  "options": [
+    {
+      "name": "msg",
+      "description": "whatever you want the bot to say",
+      "type": 3,
+      "required": true
+    },
+    {
+      "name": "attachment",
+      "description": "optional attachment you want to send",
+      "type": 11,
+      "required": false
+    }
+  ],
+  "description": "Makes the bot say something",
+  "register": true
+}

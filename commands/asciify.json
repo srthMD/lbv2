@@ -1,0 +1,45 @@
+{
+  "backendClass": "ro.srth.lbv2.command.slash.AsciifyCommand",
+  "name": "asciify",
+  "options": [
+    {
+      "name": "image",
+      "description": "The image to asciify",
+      "type": 11,
+      "required": true
+    },
+    {
+      "ranges": {
+        "maxInt": 145,
+        "minInt": 20
+      },
+      "name": "width",
+      "description": "The width in characters of the ascii result. Default is `100`.",
+      "type": 4,
+      "required": false
+    },
+    {
+      "ranges": {
+        "maxInt": 50,
+        "minInt": 20
+      },
+      "name": "height",
+      "description": "The height in characters of the ascii result. Default is 50.",
+      "type": 4,
+      "required": false
+    },
+    {
+      "name": "inverted",
+      "description": "Decides if the character set is reversed (darker = denser character). True by default.",
+      "type": 5,
+      "required": false
+    }
+  ],
+  "description": "Turns an image into a bunch of ascii characters.",
+  "register": true,
+  "attachedData": {
+    "charSet": " .:-=+*#%@",
+    "defaultWidth": 100,
+    "defaultHeight": 50
+  }
+}

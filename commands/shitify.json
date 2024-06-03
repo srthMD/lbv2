@@ -1,0 +1,151 @@
+{
+  "backendClass": "ro.srth.lbv2.command.slash.ShitifyCommand",
+  "subCmds": [
+    {
+      "name": "video",
+      "options": [
+        {
+          "name": "attachment",
+          "description": "The video you want to compress",
+          "type": 11,
+          "required": true
+        },
+        {
+          "ranges": {
+            "maxInt": 1000
+          },
+          "name": "width",
+          "description": "Target width of the output video",
+          "type": 4,
+          "required": false
+        },
+        {
+          "ranges": {
+            "maxInt": 1000
+          },
+          "name": "height",
+          "description": "Target height of the output video",
+          "type": 4,
+          "required": false
+        },
+        {
+          "ranges": {
+            "maxInt": 36000,
+            "minInt": 2000
+          },
+          "name": "bitrate",
+          "description": "Target bitrate of the output video, default 8000",
+          "type": 4,
+          "required": false
+        },
+        {
+          "ranges": {
+            "maxInt": 80000,
+            "minInt": 4000
+          },
+          "name": "audiobitrate",
+          "description": "Target audio bitrate of the output video, default 16000",
+          "type": 4,
+          "required": false
+        },
+        {
+          "ranges": {
+            "maxInt": 30,
+            "minInt": 1
+          },
+          "name": "fps",
+          "description": "Target fps of the output video, default 5",
+          "type": 4,
+          "required": false
+        },
+        {
+          "name": "vf",
+          "description": "Advanced video filter output to input into ffmpeg (-vf).",
+          "type": 3,
+          "required": false
+        },
+        {
+          "name": "af",
+          "description": "Advanced audio filter output to input into ffmpeg (-af).",
+          "type": 3,
+          "required": false
+        }
+      ],
+      "description": "Compress a video"
+    },
+    {
+      "name": "audio",
+      "options": [
+        {
+          "name": "attachment",
+          "description": "The audio you want to compress",
+          "type": 11,
+          "required": true
+        },
+        {
+          "ranges": {
+            "maxInt": 48000,
+            "minInt": 8000
+          },
+          "name": "audiobitrate",
+          "description": "Target audio bit rate, default 16000",
+          "type": 4,
+          "required": false
+        },
+        {
+          "ranges": {
+            "maxInt": 48000,
+            "minInt": 8000
+          },
+          "name": "audiosamplingrate",
+          "description": "audio sampling rate, default 16000",
+          "type": 4,
+          "required": false
+        },
+        {
+          "ranges": {
+            "maxInt": 500,
+            "minInt": 1
+          },
+          "name": "volume",
+          "description": "Sets volume of the video, will be overridden if af isn't blank",
+          "type": 4,
+          "required": false
+        },
+        {
+          "name": "speed",
+          "description": "Sets speed of the audio, will be overridden if af isn't blank",
+          "type": 10,
+          "required": false
+        },
+        {
+          "name": "pitch",
+          "description": "Sets pitch of the audio, will be overridden if af isn't blank",
+          "type": 10,
+          "required": false
+        },
+        {
+          "name": "af",
+          "description": "Advanced audio filter output to input into ffmpeg (-af).",
+          "type": 3,
+          "required": false
+        }
+      ],
+      "description": "Compress an audio file"
+    }
+  ],
+  "permissions": [
+    11,
+    14,
+    15
+  ],
+  "name": "shitify",
+  "description": "Compresses media to ungodly amounts",
+  "register": true,
+  "attachedData": {
+    "defaultBitrate": 8000,
+    "defaultAudioBitrate": 16000,
+    "defaultSamplingRate": 16000,
+    "defaultFps": 5
+  }
+}

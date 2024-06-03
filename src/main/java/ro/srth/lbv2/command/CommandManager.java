@@ -21,6 +21,8 @@ import java.io.*;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
  */
 public class CommandManager extends ListenerAdapter {
     private static final File CMDPATH = new File("cmds");
+
+    private final ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 5);
 
     private final Map<String, LBCommand> handlers = new HashMap<>();
 
@@ -43,7 +47,7 @@ public class CommandManager extends ListenerAdapter {
             return;
         }
 
-        cmd.onSlashCommandInteraction(event);
+        exec.submit(() -> cmd.onSlashCommandInteraction(event));
     }
 
     /**
@@ -88,7 +92,6 @@ public class CommandManager extends ListenerAdapter {
                     var cmd = handlers.getOrDefault(suc.getName(), null);
                     if (cmd != null) {
                         handlers.remove(suc.getName());
-                        var newCmd = safeNewInstance(cmd.getData());
 
                         Bot.log.info("Upserted command {}", suc.getName());
                     } else {

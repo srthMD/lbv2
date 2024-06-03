@@ -2,10 +2,11 @@ plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'org.jetbrains.kotlin.jvm'
+    id 'idea'
 }
 
 group = 'ro.srth.lbv2'
-version = '1.1.0'
+version = 'v1.0.0'
 
 repositories {
     mavenCentral()
@@ -21,16 +22,40 @@ dependencies {
     implementation("net.dv8tion:JDA:5.0.0-beta.22")
     implementation('ch.qos.logback:logback-classic:1.4.14')
     implementation("org.json:json:20240303")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
     //https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
     implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
+
+    testImplementation(platform('org.junit:junit-bom:5.10.2'))
+    testImplementation('org.junit.jupiter:junit-jupiter')
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 }
 
 shadowJar {
     exclude 'ro/srth/lbv2/JSONGenerator*'
 }
+
+tasks.register('copyCommands', Copy) {
+    from "build/libs/cmds"
+    into "commands"
+    include "*.json"
+}
+
+tasks.register('deploy', Zip) {
+    shadowJar
+
+    def tokenFile = file("build/libs/token.txt")
+    tokenFile.write("PUT YOUR DISCORD BOT KEY HERE (DO NOT SHARE THIS FILE)")
+
+    from "build/libs"
+    include "*.jar"
+    include "cmds"
+    include "token.txt"
+    into project.name + ".zip"
+}
+
 kotlin {
     jvmToolchain(21)
 }
