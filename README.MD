@@ -46,7 +46,6 @@ For building an archive, run the deploy task **(this will call shadowJar)**.
 ```
 
 ### Running
-
 Before running, there are some files that the JAR will need before running.
 
 * A token.txt with your application token
@@ -54,16 +53,11 @@ Before running, there are some files that the JAR will need before running.
 * A folder named ffmpeg with a ffmpeg installation (ffmpeg/bin/ffmpeg.exe)
 
 > [!IMPORTANT]
-> <br>
 > An ffmpeg installation is not needed
->
-if [ShitifyCommand](https://github.com/srthMD/lbv2/blob/master/src/main/kotlin/ro/srth/lbv2/command/slash/ShitifyCommand.kt)
-does not exist.
+> if [ShitifyCommand](https://github.com/srthMD/lbv2/blob/master/src/main/kotlin/ro/srth/lbv2/command/slash/ShitifyCommand.kt) does not exist.
 
 > [!WARNING]
-> <br>
 > Any commands that do not have a corresponding JSON file will not be registered.
-> <br>
 > <br>
 > The same is applied for any JSON files without their respective classes.
 
