@@ -85,6 +85,11 @@ public class CommandManager extends ListenerAdapter {
 
         LBCommand.Data data = fromJSON(new JSONObject(raw));
 
+        if (data == null) {
+            Bot.log.error("Error generating data from json");
+            return;
+        }
+
         SlashCommandData slashCmd = data.toSlashCommand();
 
         command.editCommand().apply(slashCmd).queue(
@@ -107,7 +112,7 @@ public class CommandManager extends ListenerAdapter {
      * If not starting from a cold start (determined by the --register argument), then only the event listeners will be set up.
      * @param coldstart Decides whether to register commands to discord or not.
      */
-    public void registerCommands(boolean coldstart) {
+    public synchronized void registerCommands(boolean coldstart) {
         var bot = Bot.getInstance().getBot();
         var first = bot.getShards().getFirst();
 
@@ -291,6 +296,11 @@ public class CommandManager extends ListenerAdapter {
                 String description = sub.getString("description");
 
                 var data = getOptionData(sub);
+
+                if (data == null) {
+                    Bot.log.error("Grabbing option data failed for command {}, skipping", name);
+                    continue;
+                }
 
                 SubcommandData dat = new SubcommandData(name, description).addOptions(data);
 

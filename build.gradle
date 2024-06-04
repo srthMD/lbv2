@@ -19,7 +19,9 @@ jar{
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.22")
+    implementation("net.dv8tion:JDA:5.0.0-beta.24") {
+        exclude module: 'opus-java'
+    }
     implementation('ch.qos.logback:logback-classic:1.4.14')
     implementation("org.json:json:20240303")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
@@ -33,10 +35,19 @@ dependencies {
     testRuntimeOnly('org.junit.platform:junit-platform-launcher')
 }
 
-shadowJar {
-    exclude 'ro/srth/lbv2/JSONGenerator*'
+kotlin {
+    jvmToolchain(21)
 }
 
+shadowJar {
+    exclude 'ro/srth/lbv2/JSONGenerator*'
+
+    def jarName = project.name + "-" + version + "-all.jar"
+    file("build/libs/start.bat").write("java --jar $jarName")
+    file("build/libs/startRegister.bat").write("java --jar $jarName --register")
+}
+
+//internal use
 tasks.register('copyCommands', Copy) {
     from "build/libs/cmds"
     into "commands"
@@ -44,18 +55,23 @@ tasks.register('copyCommands', Copy) {
 }
 
 tasks.register('deploy', Zip) {
-    shadowJar
+    deploy.dependsOn(shadowJar)
 
-    def tokenFile = file("build/libs/token.txt")
-    tokenFile.write("PUT YOUR DISCORD BOT KEY HERE (DO NOT SHARE THIS FILE)")
+    def jarName = project.name + "-" + version + "-all.jar"
+
+    file("build/libs/start.bat").write("java --jar $jarName")
+    file("build/libs/startRegister.bat").write("java --jar $jarName --register")
+
+    from projectDir
+    include "README.MD"
 
     from "build/libs"
-    include "*.jar"
+    include jarName
     include "cmds"
-    include "token.txt"
-    into project.name + ".zip"
-}
+    include("start*.bat")
+    include("token.txt")
 
-kotlin {
-    jvmToolchain(21)
+    filesMatching("token.txt") {
+        it.file.write("PUT YOUR DISCORD TOKEN HERE, DO NOT SHARE THIS FILE")
+    }
 }
