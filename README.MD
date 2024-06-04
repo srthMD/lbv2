@@ -61,8 +61,7 @@ Before running, there are some files that the JAR will need before running.
 
 > [!NOTE]
 > An FFMPEG installation is not needed
->
-if [ShitifyCommand](https://github.com/srthMD/lbv2/blob/master/src/main/kotlin/ro/srth/lbv2/command/slash/ShitifyCommand.kt)
+> if [ShitifyCommand](https://github.com/srthMD/lbv2/blob/master/src/main/kotlin/ro/srth/lbv2/command/slash/ShitifyCommand.kt)
 > does not exist, otherwise the command will not run.
 
 After setup, run the bot using your Java installation like so, replace the X's with
