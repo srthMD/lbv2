@@ -15,7 +15,6 @@ import ro.srth.lbv2.input.InputHandler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -31,7 +30,7 @@ public final class Bot {
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
-    public Bot() throws IOException {
+    public Bot() {
         String token;
 
         try{
@@ -66,7 +65,7 @@ public final class Bot {
         bot.addEventListener(commandManager);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         boolean coldstart = false;
 
         if (args.length != 0) {
