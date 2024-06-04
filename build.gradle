@@ -43,8 +43,8 @@ shadowJar {
     exclude 'ro/srth/lbv2/JSONGenerator*'
 
     def jarName = project.name + "-" + version + "-all.jar"
-    file("build/libs/start.bat").write("java --jar $jarName")
-    file("build/libs/startRegister.bat").write("java --jar $jarName --register")
+    file("build/libs/start.bat").write("java -jar $jarName")
+    file("build/libs/startRegister.bat").write("java -jar $jarName --register")
 }
 
 //internal use
@@ -58,9 +58,6 @@ tasks.register('deploy', Zip) {
     deploy.dependsOn(shadowJar)
 
     def jarName = project.name + "-" + version + "-all.jar"
-
-    file("build/libs/start.bat").write("java --jar $jarName")
-    file("build/libs/startRegister.bat").write("java --jar $jarName --register")
 
     from projectDir
     include "README.MD"
