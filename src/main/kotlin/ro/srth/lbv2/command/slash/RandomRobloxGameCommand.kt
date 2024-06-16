@@ -7,6 +7,7 @@ import org.json.JSONObject
 import ro.srth.lbv2.command.LBCommand
 
 @Suppress("unused")
+//TODO: improve this by searching for random users with older ids and randomly selecting the top 3 most played games
 class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
     private companion object {
         const val APIPREFIX = "https://games.roblox.com/v2/users/"
@@ -45,6 +46,8 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
         } else {
             event.reply("Unable to get games, user may not exist.").queue()
         }
+
+        response.close()
     }
 
     private fun getRandomGame(event: SlashCommandInteractionEvent) {
@@ -63,9 +66,9 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
                     event.reply(link).queue()
                     return
                 }
-
                 else -> link = "https://www.roblox.com/games/${bot.rand().nextLong(0, 1000000000)}"
             }
+            response.close()
         }
 
         event.reply("Failed to find a valid game after 10 requests, please try again.").queue()

@@ -54,7 +54,7 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
         val secondEmoji = if (secondAnswer.size > 1) secondAnswer.last() else "❔"
 
         val action = event.replyPoll(
-            MessagePollData.builder(String.format(template!!, firstAnswer, secondAnswer))
+            MessagePollData.builder(String.format(template!!, firstAnswer.first(), secondAnswer.first()))
                 .addAnswer(firstAnswer.first(), Emoji.fromFormatted(firstEmoji))
                 .addAnswer(secondAnswer.first(), Emoji.fromFormatted(secondEmoji))
                 .setDuration(hours, TimeUnit.HOURS)
