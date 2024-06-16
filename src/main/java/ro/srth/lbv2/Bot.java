@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.srth.lbv2.cache.FileCache;
 import ro.srth.lbv2.command.CommandManager;
-import ro.srth.lbv2.input.InputHandler;
+import ro.srth.lbv2.handlers.InputHandler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -27,6 +27,7 @@ public final class Bot {
     private final Random rand = new Random(System.currentTimeMillis());
     private final FileCache fileCache;
     private final InputHandler inputHandler;
+    private boolean shutdown = false;
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
@@ -43,7 +44,7 @@ public final class Bot {
 
         var builder = DefaultShardManagerBuilder.createLight(token);
         builder.setLargeThreshold(100)
-                .enableIntents(GatewayIntent.GUILD_MEMBERS)
+                .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES)
                 .enableCache(CacheFlag.VOICE_STATE)
                 .setAutoReconnect(true)
                 .setBulkDeleteSplittingEnabled(true)
@@ -62,7 +63,6 @@ public final class Bot {
 
         this.inputHandler = new InputHandler();
         this.commandManager = new CommandManager();
-        bot.addEventListener(commandManager);
     }
 
     public static void main(String[] args) {
@@ -77,6 +77,7 @@ public final class Bot {
         instance = new Bot();
         instance.inputHandler.initHandler();
         instance.commandManager.registerCommands(coldstart);
+        instance.bot.addEventListener(instance.commandManager);
     }
 
     private static String getToken() throws FileNotFoundException {
@@ -93,7 +94,9 @@ public final class Bot {
     }
 
     public void shutdown() {
-        inputHandler.getThread().interrupt();
+        this.shutdown = true;
+        inputHandler.shutdown();
+        commandManager.getExecutor().shutdown();
         fileCache.flush();
         bot.shutdown();
     }
@@ -116,5 +119,9 @@ public final class Bot {
 
     public OkHttpClient getClient() {
         return client;
+    }
+
+    public boolean isShutdown() {
+        return shutdown;
     }
 }

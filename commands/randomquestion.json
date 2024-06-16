@@ -1,0 +1,21 @@
+{
+  "backendClass": "ro.srth.lbv2.command.slash.RandomQuestionCommand",
+  "subCmds": [],
+  "permissions": [
+    13
+  ],
+  "name": "randomquestion",
+  "options": [
+    {
+      "ranges": {
+        "maxInt": 24
+      },
+      "name": "hours",
+      "description": "If inputted, sets poll duration to the provided number in hours, or 1 hour.",
+      "type": 4,
+      "required": false
+    }
+  ],
+  "description": "Asks a random question",
+  "register": true
+}

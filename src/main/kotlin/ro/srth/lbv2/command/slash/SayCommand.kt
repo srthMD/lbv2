@@ -19,9 +19,10 @@ class SayCommand(data: Data) : LBCommand(data) {
 
 
         if (attachment != null) {
-            val stream = attachment.proxy.download().get()
-            val rand = bot.rand().nextLong()
-            interaction.addFiles(FileUpload.fromData(stream, "attachment${rand}.${attachment.fileExtension}"))
+            attachment.proxy.download().get().use { download ->
+                val rand = bot.rand().nextLong()
+                interaction.addFiles(FileUpload.fromData(download, "attachment${rand}.${attachment.fileExtension}"))
+            }
         } else if (str.isEmpty()) {
             event.reply("You must send at least a message or attachment.").setEphemeral(true).queue()
         }
@@ -33,6 +34,7 @@ class SayCommand(data: Data) : LBCommand(data) {
             /* failure = */ { err ->
                 event.hook.editOriginal("An error occurred while sending").queue()
                 Bot.log.error(err.javaClass.canonicalName + " while using /say: ${err.message}")
-            })
+            }
+        )
     }
 }

@@ -12,6 +12,9 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import ro.srth.lbv2.Bot;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 /**
  * The base class for all slash command handler classes.
  * Every command should extend this class and implement {@link #runSlashCommand(SlashCommandInteractionEvent)}.
@@ -47,8 +50,9 @@ public abstract class LBCommand {
             } else{
                 event.reply("An unknown error occurred.").setEphemeral(true).queue();
             }
+            var stacktrace = Arrays.stream(e.getStackTrace()).map(str -> "\n" + str).collect(Collectors.joining());
 
-            Bot.log.error("{} running command {}: {} \n{}", e.getClass().getCanonicalName(), event.getFullCommandName(), e.getMessage(), e.getStackTrace());
+            Bot.log.error("{} running command {}: {} {}", e, event.getFullCommandName(), e.getCause(), stacktrace);
         }
     }
 

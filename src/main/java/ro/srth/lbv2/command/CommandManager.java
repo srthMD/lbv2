@@ -26,14 +26,15 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
- * Manages registration of commands from JSON data to discord.
+ * Manages registration and execution of commands from JSON data to discord.
  * <br>
  * After logon, the bot will usually call {@link #registerCommands(boolean) registerCommamnds} first.
  */
 public class CommandManager extends ListenerAdapter {
+
     private static final File CMDPATH = new File("cmds");
 
-    private final ExecutorService exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 5);
+    private final ExecutorService exec = Executors.newWorkStealingPool(5);
 
     private final Map<String, LBCommand> handlers = new HashMap<>();
 
@@ -93,7 +94,7 @@ public class CommandManager extends ListenerAdapter {
         SlashCommandData slashCmd = data.toSlashCommand();
 
         command.editCommand().apply(slashCmd).queue(
-                (suc) -> {
+                suc -> {
                     var cmd = handlers.getOrDefault(suc.getName(), null);
                     if (cmd != null) {
                         handlers.remove(suc.getName());
@@ -103,7 +104,7 @@ public class CommandManager extends ListenerAdapter {
                         Bot.log.warn("Upserted command {}, but failed to re-instantiate handler.", suc.getName());
                     }
                 },
-                (fail) -> Bot.log.error("Failed to edit command {}: {}", id, fail.getMessage())
+                fail -> Bot.log.error("Failed to edit command {}: {}", id, fail.getMessage())
         );
     }
 
@@ -562,5 +563,9 @@ public class CommandManager extends ListenerAdapter {
             return false;
         }
         return true;
+    }
+
+    public ExecutorService getExecutor() {
+        return exec;
     }
 }

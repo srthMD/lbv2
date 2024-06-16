@@ -43,3 +43,9 @@ bin/
 ### Mac OS ###
 .DS_Store!/.idea/
 
+### private commands ###
+src/main/java/ro/srth/lbv2/listener/RandomSoundListener.java
+src/main/java/ro/srth/lbv2/audio/RandomSoundProvider.java
+src/main/kotlin/ro/srth/lbv2/command/slash/RandomSoundCommand.kt
+
+

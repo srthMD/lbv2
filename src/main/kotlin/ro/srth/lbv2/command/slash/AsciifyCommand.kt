@@ -49,7 +49,7 @@ class AsciifyCommand(data: Data) : LBCommand(data) {
         
         try {
             attachment.proxy.download().get().use { imageStream ->
-                val image: BufferedImage = downscale(ImageIO.read(imageStream), argWidth, argHeight)
+                val image = downscale(ImageIO.read(imageStream), argWidth, argHeight)
 
                 val width = image.width
                 val height = image.height

@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import ro.srth.lbv2.command.slash.RandomRobloxGameCommand;
+import ro.srth.lbv2.command.slash.RandomQuestionCommand;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.BufferedWriter;
@@ -20,15 +20,17 @@ import java.util.List;
 @SuppressWarnings("ALL")
 public class JSONGenerator {
     public static void main(String[] args) {
-        String name = "randomrobloxgame";
-        String description = "Finds a random roblox game";
-        String classPath = RandomRobloxGameCommand.class.getName();
+        String name = "randomquestion";
+        String description = "Asks a random question";
+        String classPath = RandomQuestionCommand.class.getName();
         boolean register = true;
 
         String guildId = null;
-        Permission[] perms = {};
+        Permission[] perms = {Permission.MESSAGE_MANAGE};
         OptionData[] options = {
-                new OptionData(OptionType.STRING, "userid", "If inputted, gets a random game from the specified user")
+                new OptionData(OptionType.INTEGER, "minutes", "If inputted, sets poll duration to the provided number in minutes, or 10")
+                        .setRequired(false)
+                        .setMaxValue(60)
         };
         SubcommandData[] subCmds = {};
 

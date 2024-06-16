@@ -1,19 +1,20 @@
-package ro.srth.lbv2.input;
+package ro.srth.lbv2.handlers;
 
 import ro.srth.lbv2.Bot;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Scanner;
 
 /**
  * Very simple command handler that allows the user to run actions
  * via the console.
  */
+
 @SuppressWarnings(value = "unused")
 public class InputHandler {
-    private static final Bot bot = Bot.getInstance();
-
-    private static final Scanner in = new Scanner(System.in);
+    private static final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
     private final Thread thread;
 
@@ -23,8 +24,11 @@ public class InputHandler {
 
     private static void quit(String[] ignoredArgs) {
         Bot.log.warn("Shutting down...");
-        in.close();
         Bot.getInstance().shutdown();
+        try {
+            in.close();
+        } catch (IOException ignored) {
+        }
         System.exit(0);
     }
 
@@ -32,10 +36,11 @@ public class InputHandler {
         var runtime = Runtime.getRuntime();
         System.out.println("Total: " + runtime.totalMemory() / 1024 + "KB");
         System.out.println("Free: " + runtime.freeMemory() / 1024 + "KB");
-        System.out.println("FileCache size: " + bot.getFileCache().size());
+        System.out.println("FileCache size: " + Bot.getInstance().getFileCache().size());
     }
 
     private static void clrcache(String[] ignoredArgs) {
+        var bot = Bot.getInstance();
         System.out.println("Clearing " + bot.getFileCache().size() + " elements.");
         bot.getFileCache().flush();
     }
@@ -63,26 +68,24 @@ public class InputHandler {
     }
 
     public Thread initHandler() {
-        Thread t = new Thread(() -> {
+        return Thread.ofVirtual().name("InputHandler").start(() -> {
             while(true){
-                var input = in.nextLine().split(" ");
-
                 try {
+                    var input = in.readLine().split(" ");
+
                     var method = InputHandler.class.getDeclaredMethod(input[0], String[].class);
 
                     method.invoke(null, (Object) input);
                 } catch (NoSuchMethodException e) {
                     System.out.println("Command does not exist.");
-                } catch (InvocationTargetException | IllegalAccessException e) {
+                } catch (InvocationTargetException | IllegalAccessException | IOException e) {
                     System.out.println("Something went wrong running the command.");
                 }
             }
         });
-        t.setDaemon(true);
-        return t;
     }
 
-    public Thread getThread() {
-        return thread;
+    public void shutdown() {
+        thread.interrupt();
     }
 }

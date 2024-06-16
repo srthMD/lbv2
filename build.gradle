@@ -6,10 +6,11 @@ plugins {
 }
 
 group = 'ro.srth.lbv2'
-version = 'v1.0.0'
+version = 'v1.1.0'
 
 repositories {
     mavenCentral()
+    maven { url "https://jitpack.io" }
 }
 
 jar{
@@ -26,6 +27,7 @@ dependencies {
     implementation("org.json:json:20240303")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation('dev.arbjerg:lavaplayer:2.2.0')
 
     //https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
     implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
@@ -50,8 +52,9 @@ shadowJar {
 //internal use
 tasks.register('copyCommands', Copy) {
     from "build/libs/cmds"
-    into "commands"
     include "*.json"
+    include "randomquestion"
+    into "commands"
 }
 
 tasks.register('deploy', Zip) {
@@ -66,9 +69,4 @@ tasks.register('deploy', Zip) {
     include jarName
     include "cmds"
     include("start*.bat")
-    include("token.txt")
-
-    filesMatching("token.txt") {
-        it.file.write("PUT YOUR DISCORD TOKEN HERE, DO NOT SHARE THIS FILE")
-    }
 }
