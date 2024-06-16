@@ -35,10 +35,10 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
             return
         }
 
-        val hours = event.getOption("minutes")?.asLong ?: 1
+        val hours = event.getOption("hours")?.asLong ?: 1
 
         val genre = questions?.get(rand.nextInt(questions.size))
-        val start = genre?.get(0)
+        val template = genre?.get(0)
 
         val first = rand.nextInt(1, genre!!.size)
         var second = rand.nextInt(1, genre.size)
@@ -53,10 +53,8 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
         val firstEmoji = if (firstAnswer.size > 1) firstAnswer.last() else "❔"
         val secondEmoji = if (secondAnswer.size > 1) secondAnswer.last() else "❔"
 
-        val action = event.reply("$start ${firstAnswer.first()} or ${secondAnswer.first()}?")
-
-        action.setPoll(
-            MessagePollData.builder("Pick a choice")
+        val action = event.replyPoll(
+            MessagePollData.builder(String.format(template!!, firstAnswer, secondAnswer))
                 .addAnswer(firstAnswer.first(), Emoji.fromFormatted(firstEmoji))
                 .addAnswer(secondAnswer.first(), Emoji.fromFormatted(secondEmoji))
                 .setDuration(hours, TimeUnit.HOURS)
