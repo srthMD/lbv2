@@ -6,7 +6,7 @@ import net.dv8tion.jda.api.utils.messages.MessagePollData
 import ro.srth.lbv2.Bot
 import ro.srth.lbv2.command.LBCommand
 import java.io.File
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 class RandomQuestionCommand(data: Data) : LBCommand(data) {
     private val canRun: Boolean
@@ -38,29 +38,52 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
         val hours = event.getOption("hours")?.asLong ?: 1
 
         val genre = questions?.get(rand.nextInt(questions.size))
-        val template = genre?.get(0)
+        val template = genre!![0]
 
-        val first = rand.nextInt(1, genre!!.size)
-        var second = rand.nextInt(1, genre.size)
+        val strs = template.split("%s")
 
-        while (first == second) {
-            second = rand.nextInt(1, genre.size)
+        //tmp set to track duplicate options
+        val indexSet: HashSet<String> = hashSetOf()
+
+        val action = MessagePollData.builder("null")
+        val title = StringBuilder()
+
+        strs.forEachIndexed { i, str ->
+            var indx = genre[rand.nextInt(1, genre.size)]
+
+            if (i == strs.size - 1) {
+                title.append(str.trim())
+                return@forEachIndexed
+            }
+
+            if (i == 0) {
+                indexSet.add(indx)
+            } else {
+                while (indexSet.contains(indx)) {
+                    indx = genre[rand.nextInt(1, genre.size)]
+                }
+
+                indexSet.add(indx)
+            }
+
+            val split = indx.split(":")
+
+            val first = split.first()
+            val emoji = Emoji.fromUnicode(split.last())
+
+            title.append(str + first)
+
+            if (split.size > 1) {
+                action.addAnswer(first, emoji)
+            } else {
+                action.addAnswer(first, Emoji.fromUnicode("❔"))
+            }
         }
 
-        val firstAnswer = genre[first].split(":")
-        val secondAnswer = genre[second].split(":")
+        action.setTitle(title.toString())
 
-        val firstEmoji = if (firstAnswer.size > 1) firstAnswer.last() else "❔"
-        val secondEmoji = if (secondAnswer.size > 1) secondAnswer.last() else "❔"
+        action.setDuration(Duration.ofHours(hours))
 
-        val action = event.replyPoll(
-            MessagePollData.builder(String.format(template!!, firstAnswer.first(), secondAnswer.first()))
-                .addAnswer(firstAnswer.first(), Emoji.fromFormatted(firstEmoji))
-                .addAnswer(secondAnswer.first(), Emoji.fromFormatted(secondEmoji))
-                .setDuration(hours, TimeUnit.HOURS)
-                .build()
-        )
-
-        action.queue()
+        event.replyPoll(action.build()).queue()
     }
 }
