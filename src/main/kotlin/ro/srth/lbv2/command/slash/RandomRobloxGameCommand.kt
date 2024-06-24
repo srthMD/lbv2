@@ -6,20 +6,19 @@ import okhttp3.Request
 import org.json.JSONObject
 import ro.srth.lbv2.command.LBCommand
 
-@Suppress("unused")
-//TODO: improve this by searching for random users with older ids and randomly selecting the top 3 most played games
-class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
-    private companion object {
-        const val APIPREFIX = "https://games.roblox.com/v2/users/"
-        const val APISUFFIX = "/games?accessFilter=2&limit=50"
-        const val SIMPLEPREFIX = "https://www.roblox.com/games/"
-    }
+private const val APIPREFIX = "https://games.roblox.com/v2/users/"
+private const val APISUFFIX = "/games?accessFilter=2&limit=50"
+private const val SIMPLEPREFIX = "https://www.roblox.com/games/"
 
+private const val MAX_REQUESTS = 10
+
+@Suppress("unused")
+class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
         val user = event.getOption("userid", OptionMapping::getAsString)
 
         if (user == null) {
-            getRandomGame(event)
+            selectRandomUser(event)
         } else {
             getRandomUserGame(user, event)
         }
@@ -50,12 +49,12 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
         response.close()
     }
 
-    private fun getRandomGame(event: SlashCommandInteractionEvent) {
-        var link = "$SIMPLEPREFIX${bot.rand().nextLong(0, 1000000000)}"
+    private fun selectRandomUser(event: SlashCommandInteractionEvent) {
+        var randId = bot.rand().nextLong(0, 400000000)
 
-        for (i in 0..10) {
+        for (i in 0..MAX_REQUESTS) {
             val request = Request.Builder()
-                .url(link)
+                .url(APIPREFIX + randId + APISUFFIX)
                 .build()
 
             val call = bot.client.newCall(request)
@@ -63,10 +62,28 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
 
             when {
                 response.code != 404 -> {
-                    event.reply(link).queue()
+                    val data = JSONObject(response.body!!.string())
+
+                    val arr = data.getJSONArray("data")
+
+                    if (arr.isEmpty) {
+                        randId = bot.rand().nextLong(0, 400000000)
+                        response.close()
+                        continue
+                    }
+
+                    val index = bot.rand().nextInt(0, arr.length())
+
+                    val game = arr.getJSONObject(index).getJSONObject("rootPlace").getLong("id")
+
+                    event.reply("$SIMPLEPREFIX$game").queue()
+                    
                     return
                 }
-                else -> link = "https://www.roblox.com/games/${bot.rand().nextLong(0, 1000000000)}"
+
+                else -> {
+                    randId = bot.rand().nextLong(0, 400000000)
+                }
             }
             response.close()
         }
