@@ -91,13 +91,15 @@ public class CommandManager extends ListenerAdapter {
             return;
         }
 
+        LBCommand newCmd = safeNewInstance(data);
+
         SlashCommandData slashCmd = data.toSlashCommand();
 
         command.editCommand().apply(slashCmd).queue(
                 suc -> {
                     var cmd = handlers.getOrDefault(suc.getName(), null);
                     if (cmd != null) {
-                        handlers.remove(suc.getName());
+                        handlers.replace(suc.getName(), newCmd);
 
                         Bot.log.info("Upserted command {}", suc.getName());
                     } else {

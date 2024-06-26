@@ -53,20 +53,42 @@ shadowJar {
 tasks.register('copyCommands', Copy) {
     from "build/libs/cmds"
     include "*.json"
-    include "randomquestion"
     into "commands"
 }
 
-tasks.register('deploy', Zip) {
-    deploy.dependsOn(shadowJar)
-
+tasks.register("prepareDeploy", Copy) {
+    prepareDeploy.dependsOn(shadowJar)
     def jarName = project.name + "-" + version + "-all.jar"
+
+    from "build/libs"
+    include "cmds/**"
+    exclude "cmds/randomquestion/*"
+    include jarName
+    include "private.json"
+    include "start*.bat"
+    include "token.txt"
 
     from projectDir
     include "README.MD"
 
-    from "build/libs"
-    include jarName
-    include "cmds"
-    include("start*.bat")
+    into "build/distributions/prepare"
+}
+
+tasks.register('deploy', Zip) {
+    deploy.dependsOn(prepareDeploy)
+    includeEmptyDirs = true
+
+    from "build/distributions/prepare"
+    include "*"
+    include "cmds/**"
+
+    eachFile {
+        if (it.name == "private.json") {
+            it.getFile().write("{\n\n}")
+        }
+
+        if (it.name == "token.txt") {
+            it.getFile().write("PUT YOUR DISCORD TOKEN HERE (DO NOT SHARE THIS FILE)")
+        }
+    }
 }
