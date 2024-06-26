@@ -30,23 +30,22 @@ class PermissionCommand(data: Data) : LBCommand(data) {
 
         val embed = EmbedBuilder()
             .setColor(Color.white)
-            .setTitle("${data.name.replaceFirstChar { it.uppercase() }} permission(s).")
+            .setTitle("${data.name.replaceFirstChar(Char::uppercase)} permission(s).")
             .setFooter("Made by srth in Java and Kotlin.")
 
-        var permsStr = ""
+        val permsStr = StringBuilder()
 
         if (perms == null) {
-            permsStr = "None"
+            permsStr.append("None")
         } else {
             perms.forEachIndexed { index, it ->
-                permsStr += if (index == perms.size - 1) {
-                    it.name
-                } else {
-                    "${it.name}, "
-                }
+                permsStr.append(
+                    if (index == perms.size - 1) it.name else "${it.name}, ",
+                )
             }
         }
-        embed.addField("Permissions", permsStr, false)
+
+        embed.addField("Permissions", permsStr.toString(), false)
 
         event.replyEmbeds(embed.build()).queue()
     }

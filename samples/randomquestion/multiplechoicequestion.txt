@@ -1,0 +1,26 @@
+# Comments start with a hashtag
+# Blank or empty lines will be ignored
+
+# First line denotes the mode, as of now it is multiple choice (MC) or yes-no questions (TF)
+MC
+
+# Second line denotes the question template, where answer(s) will be placed in %s
+Which food do you prefer, %s or %s?
+
+# Following lines will be the answers
+# Emojis can be added to the poll answers by adding a colon after the answer like so: Pizza:🍕
+# Answers with no emoji will have their poll answer emoji be a question mark (❔)
+
+# Answers with Emojis
+Pizza:🍕
+Burger:🍔
+Fries:🍟
+Sushi:🍣
+Tacos:🌮
+
+# Answers with no emojis
+Chicken Wings
+Cake
+Cookies
+Steak
+Watermelon

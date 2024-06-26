@@ -80,14 +80,12 @@ class RandomRobloxGameCommand(data: Data) : LBCommand(data) {
                     
                     return
                 }
-
                 else -> {
                     randId = bot.rand().nextLong(0, 400000000)
                 }
             }
             response.close()
         }
-
         event.reply("Failed to find a valid game after 10 requests, please try again.").queue()
     }
 }

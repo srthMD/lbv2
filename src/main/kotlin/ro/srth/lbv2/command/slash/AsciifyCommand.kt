@@ -20,8 +20,8 @@ class AsciifyCommand(data: Data) : LBCommand(data) {
     private val defaultHeight: Int
 
     init {
-        val obj = data.attachedData
-        this.charSet = obj!!.getString("charSet")
+        val obj = data.attachedData!!
+        this.charSet = obj.getString("charSet")
         this.defaultWidth = obj.getInt("defaultWidth")
         this.defaultHeight = obj.getInt("defaultHeight")
     }

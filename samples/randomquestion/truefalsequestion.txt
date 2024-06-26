@@ -1,0 +1,25 @@
+# Comments start with a hashtag
+# Blank or empty lines will be ignored
+
+# First line denotes the mode, as of now it is multiple choice (MC) or yes-no questions (TF)
+TF
+
+# Second line denotes the question template, where answer(s) will be placed in %s
+# In true false questions, the answer(s) will only be placed in the title, and the emoji will be ignored.
+Do you like %s?
+
+# The first two following lines will be the yes and no answers, emojis will work here.
+Yes:👍
+No:👎
+
+# Following lines will be the answer(s) put in the title.
+Pizza
+Burgers
+Fries
+Sushi
+Tacos
+Chicken Wings
+Cake
+Cookies
+Steak
+Watermelon
