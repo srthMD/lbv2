@@ -28,7 +28,6 @@ dependencies {
     implementation("org.json:json:20240303")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("dev.arbjerg:lavaplayer:2.2.0")
 
     //https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
     implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
