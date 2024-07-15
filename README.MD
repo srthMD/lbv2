@@ -1,8 +1,5 @@
 # Leilabot Version 2
-
-New and hopefully not going to be abandoned version
-of leilabot, revamped from the past mistakes of my last
-attempt at a bot (lots of static blocks).
+A modular bot with the ability to update commands at runtime.
 
 ### Whats Different?
 The first iteration of leilabot relied heavily on the reflections
