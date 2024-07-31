@@ -9,11 +9,12 @@ plugins {
 }
 
 group = "ro.srth.lbv2"
-version = "v1.0.0"
+version = "v1.0.1"
 
 repositories {
     mavenCentral()
     maven(url = "https://jitpack.io")
+    maven(url = "https://repo.spring.io/milestone")
 }
 
 application {
@@ -24,6 +25,7 @@ dependencies {
     implementation("net.dv8tion:JDA:5.0.0-beta.24") {
         exclude(module = "opus-java")
     }
+
     implementation("ch.qos.logback:logback-classic:1.4.14")
     implementation("org.json:json:20240303")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
@@ -31,6 +33,14 @@ dependencies {
 
     //https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
     implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
+    implementation("club.minnced:jda-ktx:0.11.0-beta.20")
+    implementation("com.github.minndevelopment:jda-reactor:1.6.0")
+
+    compileOnly("io.projectreactor:reactor-core:3.6.7")
+    testCompileOnly("io.projectreactor:reactor-test:3.6.7")
+    implementation("io.projectreactor.kotlin:reactor-kotlin-extensions:1.3.0-M1")
 
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
