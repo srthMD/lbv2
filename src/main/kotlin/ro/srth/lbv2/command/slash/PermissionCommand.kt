@@ -1,8 +1,8 @@
 package ro.srth.lbv2.command.slash
 
+import dev.minn.jda.ktx.interactions.components.getOption
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
-import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import ro.srth.lbv2.command.LBCommand
 import java.awt.Color
 
@@ -15,9 +15,7 @@ class PermissionCommand(data: Data) : LBCommand(data) {
     }
 
     private fun showPermissions(event: SlashCommandInteractionEvent) {
-        val input = event.getOption("command", null, OptionMapping::getAsString)
-            ?: throw NullPointerException("Input was null.")
-
+        val input = event.getOption<String>("command")!!
         val command: LBCommand? = bot.commandManager.getCommandHandler(input)
 
         if (command == null) {
@@ -40,7 +38,7 @@ class PermissionCommand(data: Data) : LBCommand(data) {
         } else {
             perms.forEachIndexed { index, it ->
                 permsStr.append(
-                    if (index == perms.size - 1) it.name else "${it.name}, ",
+                    if (index == perms.size - 1) it!!.name else "${it!!.name}, ",
                 )
             }
         }

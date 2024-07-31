@@ -1,9 +1,8 @@
 package ro.srth.lbv2;
 
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
-import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import okhttp3.OkHttpClient;
@@ -21,7 +20,7 @@ import java.util.Scanner;
 public final class Bot {
     private static Bot instance;
 
-    private final ShardManager bot;
+    private final JDA bot;
     private final CommandManager commandManager;
     private final OkHttpClient client = new OkHttpClient();
     private final Random rand = new Random(System.currentTimeMillis());
@@ -31,7 +30,7 @@ public final class Bot {
 
     public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
-    public Bot() {
+    public Bot() throws InterruptedException {
         String token;
 
         try{
@@ -42,30 +41,22 @@ public final class Bot {
             System.exit(-1);
         }
 
-        var builder = DefaultShardManagerBuilder.createLight(token);
+        var builder = JDABuilder.createLight(token);
         builder.setLargeThreshold(100)
                 .enableIntents(GatewayIntent.GUILD_MEMBERS, GatewayIntent.GUILD_VOICE_STATES)
                 .enableCache(CacheFlag.VOICE_STATE)
                 .setAutoReconnect(true)
                 .setBulkDeleteSplittingEnabled(true)
                 .setMemberCachePolicy(MemberCachePolicy.ALL);
-        bot = builder.build();
+
+        bot = builder.build().awaitReady();
 
         this.fileCache = new FileCache();
-
-        try {
-            for (JDA shard : bot.getShards()) {
-                shard.awaitReady();
-            }
-        } catch (InterruptedException e) {
-            log.warn("Await ready interrupted: {}", e.getMessage());
-        }
-
         this.inputHandler = new InputHandler();
         this.commandManager = new CommandManager();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         boolean coldstart = false;
 
         if (args.length != 0) {
@@ -101,7 +92,7 @@ public final class Bot {
         bot.shutdown();
     }
 
-    public ShardManager getBot() {
+    public JDA getBot() {
         return bot;
     }
 

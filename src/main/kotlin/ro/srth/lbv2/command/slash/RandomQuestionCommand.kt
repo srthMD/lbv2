@@ -1,5 +1,6 @@
 package ro.srth.lbv2.command.slash
 
+import dev.minn.jda.ktx.emoji.toEmoji
 import net.dv8tion.jda.api.entities.emoji.Emoji
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
 import net.dv8tion.jda.api.utils.messages.MessagePollBuilder
@@ -9,14 +10,12 @@ import ro.srth.lbv2.command.LBCommand
 import java.io.File
 import java.time.Duration
 
-private const val QUESTIONMARK = "❔"
+private val QUESTIONMARK = "❔".toEmoji()
 
 @Suppress("unused")
 class RandomQuestionCommand(data: Data) : LBCommand(data) {
     private val canRun: Boolean
     private val questions: List<List<String>>?
-
-    private val questionMarkEmoji = Emoji.fromUnicode(QUESTIONMARK)
 
     private val rand = Bot.getInstance().rand()
 
@@ -62,7 +61,7 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
 
             else -> {
                 event.reply("Something went wrong generating the question.").setEphemeral(true).queue()
-                return
+                throw UnsupportedOperationException(mode + "is not supported.")
             }
         }
 
@@ -111,7 +110,7 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
             if (split.size > 1) {
                 action.addAnswer(first, emoji)
             } else {
-                action.addAnswer(first, questionMarkEmoji)
+                action.addAnswer(first, QUESTIONMARK)
             }
         }
 
@@ -157,8 +156,8 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
             action.addAnswer(trueAnswer.first(), Emoji.fromUnicode(trueAnswer.last()))
             action.addAnswer(falseAnswer.first(), Emoji.fromUnicode(falseAnswer.last()))
         } else {
-            action.addAnswer(trueAnswer.first(), questionMarkEmoji)
-            action.addAnswer(falseAnswer.first(), questionMarkEmoji)
+            action.addAnswer(trueAnswer.first(), QUESTIONMARK)
+            action.addAnswer(falseAnswer.first(), QUESTIONMARK)
         }
 
         action.setTitle(title.toString())

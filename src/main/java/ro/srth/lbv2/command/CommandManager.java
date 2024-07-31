@@ -34,7 +34,7 @@ public class CommandManager extends ListenerAdapter {
 
     private static final File CMDPATH = new File("cmds");
 
-    private final ExecutorService exec = Executors.newWorkStealingPool(5);
+    private final ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor();
 
     private final Map<String, LBCommand> handlers = new HashMap<>();
 
@@ -61,8 +61,8 @@ public class CommandManager extends ListenerAdapter {
      * @param id The ID of the command represented in the discord client.
      */
     public void upsertCommand(String id) {
-        var first = Bot.getInstance().getBot().getShards().getFirst();
-        Command command = first.retrieveCommandById(id).onErrorMap(throwable -> null).complete();
+        var first = Bot.getInstance().getBot();
+        Command command = first.retrieveCommandById(id).onErrorMap(_ -> null).complete();
 
         if (command == null){
             Bot.log.error("Command id {} does not exist.", id);
@@ -117,7 +117,6 @@ public class CommandManager extends ListenerAdapter {
      */
     public synchronized void registerCommands(boolean coldstart) {
         var bot = Bot.getInstance().getBot();
-        var first = bot.getShards().getFirst();
 
         if(coldstart){
             wipeUselessCommands();
@@ -155,8 +154,8 @@ public class CommandManager extends ListenerAdapter {
 
             if(guildId == null){
                 if(coldstart){
-                    first.upsertCommand(cmdData).queue(
-                            (suc) -> {
+                    bot.upsertCommand(cmdData).queue(
+                            (_) -> {
                                 handlers.putIfAbsent(command.getData().name(), command);
                                 Bot.log.info("Registered global command {}", data.name());
                             },
@@ -175,7 +174,7 @@ public class CommandManager extends ListenerAdapter {
                     }
 
                     g.upsertCommand(cmdData).queue(
-                            (suc) -> {
+                            (_) -> {
                                 handlers.putIfAbsent(command.getData().name(), command);
                                 Bot.log.info("Registered guild command {}", data.name());
                             },
@@ -195,7 +194,7 @@ public class CommandManager extends ListenerAdapter {
 
 
     private void wipeUselessCommands() {
-        var first = Bot.getInstance().getBot().getShards().getFirst();
+        var first = Bot.getInstance().getBot();
         for (Command command : first.retrieveCommands().complete()) {
             File f = jsonFromName(command.getName());
 
