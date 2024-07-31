@@ -79,13 +79,3 @@ java -jar lbv2-vX.X.X-all.jar --register
 > Any commands that do not have a corresponding JSON file will not be registered.
 > <br>
 > The same is applied for any JSON files without their respective classes.
-
-### Dependencies
-
-As of 27.05.2024, leilabot depends on:
-* [JDA](https://github.com/discord-jda/JDA)
-* [Kotlin](https://kotlinlang.org/)
-* [org.json](https://mvnrepository.com/artifact/org.json/json)
-* [Logback Classic](https://github.com/qos-ch/logback)
-* [Bramp's FFMPEG wrapper](https://github.com/bramp/ffmpeg-cli-wrapper)
-
