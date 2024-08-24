@@ -1,7 +1,7 @@
-package ro.srth.lbv2.handlers;
+package ro.srth.lbv2.util;
 
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
-import ro.srth.lbv2.Bot;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,8 +20,7 @@ public class PrivateHandler {
         final File jsonFile = new File("private.json");
 
         if (!jsonFile.exists()) {
-            Bot.log.warn("private.json does not exist, all queries will return null.");
-            return;
+            throw new RuntimeException("private.json file does not exist");
         }
 
         try (var reader = new FileInputStream(jsonFile)) {
@@ -31,10 +30,11 @@ public class PrivateHandler {
 
             keys.toMap().forEach((k, v) -> this.keys.put(k, v.toString()));
         } catch (IOException e) {
-            Bot.log.error("error reading private.json, all queries will return null.");
+            throw new RuntimeException("error reading private.json");
         }
     }
 
+    @Nullable
     public String query(String query) {
         return this.keys.getOrDefault(query, null);
     }

@@ -10,7 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.srth.lbv2.cache.FileCache;
 import ro.srth.lbv2.command.CommandManager;
-import ro.srth.lbv2.handlers.InputHandler;
+import ro.srth.lbv2.input.InputHandler;
+import ro.srth.lbv2.util.FastFlags;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,16 +20,19 @@ import java.util.Scanner;
 
 public final class Bot {
     private static Bot instance;
+    public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
     private final JDA bot;
     private final CommandManager commandManager;
-    private final OkHttpClient client = new OkHttpClient();
-    private final Random rand = new Random(System.currentTimeMillis());
-    private final FileCache fileCache;
-    private final InputHandler inputHandler;
-    private boolean shutdown = false;
 
-    public static final Logger log = LoggerFactory.getLogger(Bot.class);
+    private final Random rand = new Random(System.currentTimeMillis());
+    private final OkHttpClient client = new OkHttpClient();
+    private final FastFlags fastFlags = new FastFlags();
+    private final FileCache fileCache = new FileCache();
+
+    private final InputHandler inputHandler;
+
+    private boolean shutdown = false;
 
     public Bot() throws InterruptedException {
         String token;
@@ -51,7 +55,6 @@ public final class Bot {
 
         bot = builder.build().awaitReady();
 
-        this.fileCache = new FileCache();
         this.inputHandler = new InputHandler();
         this.commandManager = new CommandManager();
     }
@@ -114,5 +117,9 @@ public final class Bot {
 
     public boolean isShutdown() {
         return shutdown;
+    }
+
+    public FastFlags getFastFlags() {
+        return fastFlags;
     }
 }

@@ -3,6 +3,7 @@ package ro.srth.lbv2.command.slash
 import dev.minn.jda.ktx.interactions.components.getOption
 import net.dv8tion.jda.api.EmbedBuilder
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent
+import ro.srth.lbv2.Bot
 import ro.srth.lbv2.command.LBCommand
 import java.awt.Color
 
@@ -15,6 +16,13 @@ class PermissionCommand(data: Data) : LBCommand(data) {
     }
 
     private fun showPermissions(event: SlashCommandInteractionEvent) {
+        val fuckU = Bot.getInstance().fastFlags.query("FBoolFuckU") as Boolean
+
+        if (fuckU) {
+            event.reply("Fuck U").queue()
+            return
+        }
+
         val input = event.getOption<String>("command")!!
         val command: LBCommand? = bot.commandManager.getCommandHandler(input)
 

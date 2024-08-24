@@ -1,4 +1,4 @@
-package ro.srth.lbv2.handlers;
+package ro.srth.lbv2.input;
 
 import ro.srth.lbv2.Bot;
 

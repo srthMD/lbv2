@@ -336,8 +336,13 @@ public class CommandManager extends ListenerAdapter {
 
                 OptionData dat = new OptionData(optionType, name, description, required);
 
-                setRanges(range, dat);
-                setChoices(choices, dat);
+                if (range != null) {
+                    setRanges(range, dat);
+                }
+
+                if (choices != null) {
+                    setChoices(choices, dat);
+                }
 
                 data[i] = dat;
             } catch (JSONException e) {
