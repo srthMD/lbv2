@@ -62,7 +62,7 @@ public class CommandManager extends ListenerAdapter {
      */
     public void upsertCommand(String id) {
         var first = Bot.getInstance().getBot();
-        Command command = first.retrieveCommandById(id).onErrorMap(_ -> null).complete();
+        Command command = first.retrieveCommandById(id).onErrorMap(n -> null).complete();
 
         if (command == null){
             Bot.log.error("Command id {} does not exist.", id);
@@ -155,7 +155,7 @@ public class CommandManager extends ListenerAdapter {
             if(guildId == null){
                 if(coldstart){
                     bot.upsertCommand(cmdData).queue(
-                            (_) -> {
+                            (suc) -> {
                                 handlers.putIfAbsent(command.getData().name(), command);
                                 Bot.log.info("Registered global command {}", data.name());
                             },
@@ -174,7 +174,7 @@ public class CommandManager extends ListenerAdapter {
                     }
 
                     g.upsertCommand(cmdData).queue(
-                            (_) -> {
+                            (suc) -> {
                                 handlers.putIfAbsent(command.getData().name(), command);
                                 Bot.log.info("Registered guild command {}", data.name());
                             },
@@ -388,39 +388,16 @@ public class CommandManager extends ListenerAdapter {
     }
 
     private void setChoices(JSONArray choices, OptionData dat) {
-        if(!(choices == null)){
+        for (int i = 0; i < choices.length(); i++) {
+            JSONObject choice = choices.getJSONObject(i);
+
+            String name = choice.getString("name");
+            Object val = choice.get("val");
+
             switch (dat.getType()){
-                //i tried using Function idfk why it didnt work
-                case STRING -> {
-                    for(int i = 0; i < choices.length(); i++){
-                        JSONObject choice = choices.getJSONObject(i);
-
-                        String name = choice.getString("name");
-                        String val = choice.getString("val");
-
-                        dat.addChoice(name, val);
-                    }
-                }
-                case INTEGER -> {
-                    for(int i = 0; i < choices.length(); i++){
-                        JSONObject choice = choices.getJSONObject(i);
-
-                        String name = choice.getString("name");
-                        int val = choice.getInt("val");
-
-                        dat.addChoice(name, val);
-                    }
-                }
-                case NUMBER -> {
-                    for(int i = 0; i < choices.length(); i++){
-                        JSONObject choice = choices.getJSONObject(i);
-
-                        String name = choice.getString("name");
-                        double val = choice.getDouble("val");
-
-                        dat.addChoice(name, val);
-                    }
-                }
+                case INTEGER -> dat.addChoice(name, (int) val);
+                case NUMBER -> dat.addChoice(name, (double) val);
+                case STRING -> dat.addChoice(name, (String) val);
             }
         }
     }
