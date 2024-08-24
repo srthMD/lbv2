@@ -39,8 +39,6 @@ public class FastFlags {
             return null;
         }
 
-        var val = this.keys.getOrDefault(query, null);
-
-        return val;
+        return this.keys.getOrDefault(query, null);
     }
 }
