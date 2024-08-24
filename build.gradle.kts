@@ -22,7 +22,7 @@ application {
 }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.0-beta.24") {
+    implementation("net.dv8tion:JDA:5.0.2") {
         exclude(module = "opus-java")
     }
 
@@ -34,7 +34,7 @@ dependencies {
     //https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
     implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
+    //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
     implementation("club.minnced:jda-ktx:0.11.0-beta.20")
     implementation("com.github.minndevelopment:jda-reactor:1.6.0")
 
