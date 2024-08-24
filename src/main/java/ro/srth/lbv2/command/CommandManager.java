@@ -38,8 +38,13 @@ public class CommandManager extends ListenerAdapter {
 
     private final Map<String, LBCommand> handlers = new HashMap<>();
 
+    /**
+     * Runs a slash command when the interaction fires, using a virtual thread per interaction.
+     *
+     * @param event The event provided from JDA
+     */
     @Override
-    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         var name = event.getName();
 
         var cmd = handlers.get(name);
@@ -81,6 +86,7 @@ public class CommandManager extends ListenerAdapter {
         try {
             raw = raw(json);
         } catch (FileNotFoundException e) {
+            Bot.log.error("Failed to convert json to raw string.");
             return;
         }
 
@@ -128,11 +134,6 @@ public class CommandManager extends ListenerAdapter {
             commandData = parseData();
         } catch (FileNotFoundException e) {
             Bot.log.error("FileNotFoundException while registering commands: {}", e.getMessage());
-            return;
-        }
-
-        if(commandData == null){
-            Bot.log.error("Failed to load commands.");
             return;
         }
 
@@ -192,33 +193,26 @@ public class CommandManager extends ListenerAdapter {
         return handlers.getOrDefault(name, null);
     }
 
-
     private void wipeUselessCommands() {
         var first = Bot.getInstance().getBot();
         for (Command command : first.retrieveCommands().complete()) {
             File f = jsonFromName(command.getName());
 
-            if(f == null){
+            if (f == null) {
                 command.delete().queue();
             }
         }
     }
 
-
     private List<LBCommand.Data> parseData() throws FileNotFoundException {
         List<File> jsons = getJsonFiles();
-
-        if(jsons == null){
-            Bot.log.warn("getJson returned null");
-            return null;
-        }
 
         List<LBCommand.Data> dataList = new ArrayList<>(jsons.size());
 
         for (File json : jsons) {
             String raw = raw(json);
 
-            try{
+            try {
                 JSONObject jsonObj = new JSONObject(raw);
 
                 LBCommand.Data data = fromJSON(jsonObj);
@@ -233,8 +227,6 @@ public class CommandManager extends ListenerAdapter {
         return dataList;
     }
 
-
-    @NotNull
     private String raw(File json) throws FileNotFoundException {
         BufferedReader reader = new BufferedReader(new FileReader(json));
 
@@ -248,7 +240,6 @@ public class CommandManager extends ListenerAdapter {
         }
         return raw;
     }
-
 
     @Nullable
     private LBCommand.Data fromJSON(JSONObject jsonObj) {
@@ -281,6 +272,8 @@ public class CommandManager extends ListenerAdapter {
 
     @Nullable
     private SubcommandData[] getSubcommandData(@NotNull JSONObject obj) {
+        Objects.requireNonNull(obj);
+
         JSONArray subs;
 
         try {
@@ -426,7 +419,6 @@ public class CommandManager extends ListenerAdapter {
         return perms;
     }
 
-
     @Nullable
     private String getGuildId(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
@@ -439,7 +431,6 @@ public class CommandManager extends ListenerAdapter {
             return null;
         }
     }
-
 
     @SuppressWarnings(value = "unchecked")
     private Class<? extends LBCommand> getBackendClass(@NotNull JSONObject obj) throws ClassNotFoundException, InvalidCommandClassException {
@@ -486,19 +477,17 @@ public class CommandManager extends ListenerAdapter {
         }
     }
 
-
-    @Nullable
-    private List<File> getJsonFiles() {
+    private List<File> getJsonFiles() throws FileNotFoundException {
         boolean b = doesCmdPathExist();
 
-        if(!b){
-            return null;
+        if (!b) {
+            throw new FileNotFoundException("Command folder does not exist");
         }
 
         File[] files = CMDPATH.listFiles();
 
-        if(files == null){
-            return null;
+        if(files == null) {
+            throw new FileNotFoundException("listFiles returned null");
         }
 
         List<File> jsons = new ArrayList<>(files.length);
@@ -512,7 +501,6 @@ public class CommandManager extends ListenerAdapter {
 
         return jsons;
     }
-
 
     @Nullable
     private File jsonFromName(String name) {
@@ -535,6 +523,7 @@ public class CommandManager extends ListenerAdapter {
         if(!CMDPATH.exists()){
             Bot.log.warn("cmds folder does not exist, creating new folder...");
             boolean suc = CMDPATH.mkdir();
+
             if(!suc){
                 Bot.log.warn("cmds folder creation unsuccessful");
             }
