@@ -81,16 +81,7 @@ public class CommandManager extends ListenerAdapter {
             return;
         }
 
-        String raw;
-
-        try {
-            raw = raw(json);
-        } catch (FileNotFoundException e) {
-            Bot.log.error("Failed to convert json to raw string.");
-            return;
-        }
-
-        LBCommand.Data data = fromJSON(new JSONObject(raw));
+        LBCommand.Data data = fromJSON(fileToJsonObject(json));
 
         if (data == null) {
             Bot.log.error("Error generating data from json");
@@ -194,12 +185,18 @@ public class CommandManager extends ListenerAdapter {
     }
 
     private void wipeUselessCommands() {
-        var first = Bot.getInstance().getBot();
-        for (Command command : first.retrieveCommands().complete()) {
+        var bot = Bot.getInstance().getBot();
+        for (Command command : bot.retrieveCommands().complete()) {
             File f = jsonFromName(command.getName());
 
             if (f == null) {
                 command.delete().queue();
+            } else {
+                var json = fileToJsonObject(f);
+
+                if (!json.getBoolean("register")) {
+                    command.delete().queue();
+                }
             }
         }
     }
@@ -210,10 +207,8 @@ public class CommandManager extends ListenerAdapter {
         List<LBCommand.Data> dataList = new ArrayList<>(jsons.size());
 
         for (File json : jsons) {
-            String raw = raw(json);
-
             try {
-                JSONObject jsonObj = new JSONObject(raw);
+                JSONObject jsonObj = fileToJsonObject(json);
 
                 LBCommand.Data data = fromJSON(jsonObj);
                 if (data == null) continue;
@@ -227,8 +222,13 @@ public class CommandManager extends ListenerAdapter {
         return dataList;
     }
 
-    private String raw(File json) throws FileNotFoundException {
-        BufferedReader reader = new BufferedReader(new FileReader(json));
+    private String raw(File json) {
+        BufferedReader reader;
+        try {
+            reader = new BufferedReader(new FileReader(json));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
         //it works
         String raw = reader.lines().collect(Collectors.joining());
@@ -524,6 +524,15 @@ public class CommandManager extends ListenerAdapter {
         }
     }
 
+    /**
+     * Turns a file into a json object (assuming the file is already a json).
+     */
+    private JSONObject fileToJsonObject(File file) {
+        String raw = raw(file);
+
+        return new JSONObject(raw);
+    }
+
     private boolean doesCmdPathExist() {
         if(!CMDPATH.exists()){
             Bot.log.warn("cmds folder does not exist, creating new folder...");
@@ -536,6 +545,7 @@ public class CommandManager extends ListenerAdapter {
         }
         return true;
     }
+
 
     public ExecutorService getExecutor() {
         return exec;
