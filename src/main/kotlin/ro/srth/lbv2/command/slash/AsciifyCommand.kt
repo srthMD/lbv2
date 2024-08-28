@@ -8,11 +8,10 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.utils.FileUpload
 import reactor.core.scheduler.Schedulers
 import ro.srth.lbv2.command.LBCommand
+import ro.srth.lbv2.util.toImage
 import java.awt.Color
 import java.awt.Image
 import java.awt.image.BufferedImage
-import java.io.InputStream
-import javax.imageio.ImageIO
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -45,7 +44,7 @@ class AsciifyCommand(data: Data) : LBCommand(data) {
         event.deferReply().queue { interaction ->
             val result = attachment.toMono()
                 .publishOn(Schedulers.boundedElastic())
-                .map { it.proxy.download().get() }
+                .mapNotNull { it.toImage() }
                 .map { asciify(it, argWidth, argHeight, reversed) }
                 .block(10.seconds.toJavaDuration())
 
@@ -56,12 +55,12 @@ class AsciifyCommand(data: Data) : LBCommand(data) {
     }
 
     private fun asciify(
-        imageStream: InputStream,
+        img: BufferedImage?,
         argWidth: Int,
         argHeight: Int,
         reversed: Boolean
     ): String {
-        val image = downscale(ImageIO.read(imageStream), argWidth, argHeight)
+        val image = downscale(img!!, argWidth, argHeight)
 
         val width = image.width
         val height = image.height
@@ -82,7 +81,6 @@ class AsciifyCommand(data: Data) : LBCommand(data) {
         }
 
         image.flush()
-        imageStream.close()
 
         val raw = sb.toString()
         return raw
