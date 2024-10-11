@@ -61,15 +61,8 @@ Before running, there are some files that the JAR will need before running.
 > [ShitifyCommand](https://github.com/srthMD/lbv2/blob/master/src/main/kotlin/ro/srth/lbv2/command/slash/ShitifyCommand.kt)
 > does not exist, otherwise the command will not run.
 
-After setup, run the bot using your Java installation like so, replace the X's with
-the version number.
-
-```console
-java -jar lbv2-vX.X.X-all.jar
-```
-
-By default, this will not automatically register commands to Discord, to register commands run with
-the --register argument:
+By default, the bot does not automaticly register commands, to do so you need to run
+with the --register argument:
 
 ```console
 java -jar lbv2-vX.X.X-all.jar --register
