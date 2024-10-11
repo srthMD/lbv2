@@ -42,11 +42,12 @@ public abstract class LBCommand {
             }
 
             if(event.getName().equals(this.data.name)){
+                Bot.log.info(event.getUser().getEffectiveName() + " ran command " + this.data.name);
                 runSlashCommand(event);
             }
         } catch (Exception e){
             if(event.isAcknowledged()){
-                event.getHook().sendMessage("An unknown error occurred.").queue();
+                event.getHook().editOriginal("An unknown error occurred.").queue();
             } else{
                 event.reply("An unknown error occurred.").setEphemeral(true).queue();
             }
