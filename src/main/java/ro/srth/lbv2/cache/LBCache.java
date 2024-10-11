@@ -8,12 +8,7 @@ package ro.srth.lbv2.cache;
  */
 public interface LBCache<K, V> {
     /**
-     * Generates a hash to be stored as a key.
-     */
-    K hash(final K key);
-
-    /**
-     * Puts a value into the hash. Should call {@link #hash(Object)} to hash the key.
+     * Puts a value into the cache.
      */
     void put(final K key, final V value);
 
