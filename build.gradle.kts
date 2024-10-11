@@ -9,6 +9,7 @@ plugins {
 }
 
 group = "ro.srth.lbv2"
+
 version = "v1.0.1"
 
 repositories {
@@ -17,24 +18,20 @@ repositories {
     maven(url = "https://repo.spring.io/milestone")
 }
 
-application {
-    mainClass.set("ro.srth.lbv2.Bot")
-}
+application { mainClass.set("ro.srth.lbv2.Bot") }
 
 dependencies {
-    implementation("net.dv8tion:JDA:5.0.2") {
-        exclude(module = "opus-java")
-    }
+    implementation("net.dv8tion:JDA:5.1.2") { exclude(module = "opus-java") }
 
     implementation("ch.qos.logback:logback-classic:1.4.14")
     implementation("org.json:json:20240303")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    //https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
+    // https://github.com/bramp/ffmpeg-cli-wrapper/issues/291
     implementation("net.bramp.ffmpeg:ffmpeg:0.8.0")
 
-    //implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
+    // implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC")
     implementation("club.minnced:jda-ktx:0.11.0-beta.20")
     implementation("com.github.minndevelopment:jda-reactor:1.6.0")
 
@@ -47,11 +44,10 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
-kotlin {
-    jvmToolchain(21)
-}
+kotlin { jvmToolchain(21) }
 
-val shadowJar by tasks.getting(ShadowJar::class) {
+val shadowJar by
+tasks.getting(ShadowJar::class) {
     exclude("ro/srth/lbv2/JSONGenerator*")
 
     val jarName = project.name + "-" + version + "-all.jar"
@@ -59,7 +55,7 @@ val shadowJar by tasks.getting(ShadowJar::class) {
     file("build/libs/startRegister.bat").writeText("java -jar $jarName --register")
 }
 
-//internal use
+// internal use
 task<Copy>("copyCommands") {
     from("build/libs/cmds")
     include("*.json")
@@ -102,3 +98,4 @@ task<Zip>("deploy") {
         }
     }
 }
+
