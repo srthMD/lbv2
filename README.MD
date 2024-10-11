@@ -37,39 +37,21 @@ ensuring you have a compatible JDK version.
 .\gradlew shadowJar
 ```
 
-For creating a full build, run the deploy task **(this will call shadowJar)**.
+For creating a full build, run the deploy task.
 
 ```console
 .\gradlew :deploy
 ```
 
 ### Running
-
-> [!NOTE]
-> If you are building from your own sources, you will need to run with the version you
-> built with, otherwise if you are running the build from the Releases page, you need Java 21
-> to run.
-
 Before running, there are some files that the JAR will need before running.
 
 * A token.txt with your application token
 * A cmds folder containing your commands as .json files. (see the commands directory)
-* A folder named ffmpeg with a ffmpeg installation (ffmpeg/bin/ffmpeg.exe)
+* An ffmpeg installation in the same directory as the JAR (if you have a command that requires it)
 
-> [!NOTE]
-> An FFMPEG installation is not needed if
-> [ShitifyCommand](https://github.com/srthMD/lbv2/blob/master/src/main/kotlin/ro/srth/lbv2/command/slash/ShitifyCommand.kt)
-> does not exist, otherwise the command will not run.
-
-After setup, run the bot using your Java installation like so, replace the X's with
-the version number.
-
-```console
-java -jar lbv2-vX.X.X-all.jar
-```
-
-By default, this will not automatically register commands to Discord, to register commands run with
-the --register argument:
+By default, the bot does not automaticly register commands, to do so you need to run
+with the --register argument:
 
 ```console
 java -jar lbv2-vX.X.X-all.jar --register
