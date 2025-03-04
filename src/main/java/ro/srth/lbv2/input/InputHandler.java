@@ -67,6 +67,7 @@ public class InputHandler {
         Bot.getInstance().getCommandManager().upsertCommand(id);
     }
 
+    @SuppressWarnings("InfiniteLoopStatement")
     public Thread initHandler() {
         return Thread.ofVirtual().name("InputHandler").start(() -> {
             while(true){

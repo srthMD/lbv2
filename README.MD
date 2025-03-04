@@ -1,7 +1,7 @@
 # Leilabot Version 2
 A modular bot with the ability to update commands at runtime.
 
-### Whats Different?
+### What's Different?
 The first iteration of leilabot relied heavily on the reflections
 library to register commands, which was not optimal for startup times
 and also had
@@ -48,7 +48,7 @@ Before running, there are some files that the JAR will need before running.
 
 * A token.txt with your application token
 * A cmds folder containing your commands as .json files. (see the commands directory)
-* An ffmpeg installation in the same directory as the JAR (if you have a command that requires it)
+* A ffmpeg installation in the same directory as the JAR (if you have a command that requires it)
 
 By default, the bot does not automaticly register commands, to do so you need to run
 with the --register argument:

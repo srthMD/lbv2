@@ -23,6 +23,7 @@ class SayCommand(data: Data) : LBCommand(data) {
             interaction.addFiles(FileUpload.fromData(download, "attachment${rand}.${attachment.fileExtension}"))
         }
 
+        @Suppress("InconsistentCommentForJavaParameter")
         interaction.queue(
             /* success = */ {
                 event.hook.editOriginal("done").queue()

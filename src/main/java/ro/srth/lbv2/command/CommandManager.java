@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
  * After logon, the bot will usually call {@link #registerCommands(boolean) registerCommamnds} first.
  */
 public class CommandManager extends ListenerAdapter {
-
     private static final File CMDPATH = new File("cmds");
 
     private final ExecutorService exec = Executors.newVirtualThreadPerTaskExecutor();
@@ -40,6 +39,7 @@ public class CommandManager extends ListenerAdapter {
 
     /**
      * Runs a slash command when the interaction fires, using a virtual thread per interaction.
+     * <br>
      *
      * @param event The event provided from JDA
      */
@@ -63,20 +63,21 @@ public class CommandManager extends ListenerAdapter {
      * <br>
      * For changes to take effect, the JSON data file of the command must be replaced by its old one in the cmds directory.
      * The name of the JSON file must also be the same as the command name.
+     *
      * @param id The ID of the command represented in the discord client.
      */
     public void upsertCommand(String id) {
-        var first = Bot.getInstance().getBot();
-        Command command = first.retrieveCommandById(id).onErrorMap(n -> null).complete();
+        var bot = Bot.getInstance().getBot();
+        Command command = bot.retrieveCommandById(id).onErrorMap(n -> null).complete();
 
-        if (command == null){
+        if (command == null) {
             Bot.log.error("Command id {} does not exist.", id);
             return;
         }
 
         File json = jsonFromName(command.getName());
 
-        if(json == null){
+        if (json == null) {
             Bot.log.error("{} does not exist!", command.getName() + ".json");
             return;
         }
@@ -110,12 +111,13 @@ public class CommandManager extends ListenerAdapter {
     /**
      * The main entry point to register commands, updating or registering commands as needed and setting up event listeners.
      * If not starting from a cold start (determined by the --register argument), then only the event listeners will be set up.
+     *
      * @param coldstart Decides whether to register commands to discord or not.
      */
     public synchronized void registerCommands(boolean coldstart) {
         var bot = Bot.getInstance().getBot();
 
-        if(coldstart){
+        if (coldstart) {
             wipeUselessCommands();
         }
 
@@ -129,13 +131,13 @@ public class CommandManager extends ListenerAdapter {
         }
 
         for (LBCommand.Data data : commandData) {
-            if(!data.shouldRegister()){
+            if (!data.shouldRegister()) {
                 continue;
             }
 
             LBCommand command = safeNewInstance(data);
 
-            if(command == null){
+            if (command == null) {
                 Bot.log.warn("Skipping command {} because safeNewInstance returned null.", data.name());
                 continue;
             }
@@ -144,8 +146,8 @@ public class CommandManager extends ListenerAdapter {
 
             String guildId = data.guildId();
 
-            if(guildId == null){
-                if(coldstart){
+            if (guildId == null) {
+                if (coldstart) {
                     bot.upsertCommand(cmdData).queue(
                             (suc) -> {
                                 handlers.putIfAbsent(command.getData().name(), command);
@@ -153,14 +155,14 @@ public class CommandManager extends ListenerAdapter {
                             },
                             (err) -> Bot.log.warn("Failed to register global command {}: {}", data.name(), err.getMessage())
                     );
-                } else{
+                } else {
                     handlers.putIfAbsent(command.getData().name(), command);
                 }
-            } else{
-                if(coldstart){
+            } else {
+                if (coldstart) {
                     Guild g = bot.getGuildById(guildId);
 
-                    if(g == null){
+                    if (g == null) {
                         Bot.log.error("Cannot upsert command {} beause the guild id is invalid", data.name());
                         continue;
                     }
@@ -172,7 +174,7 @@ public class CommandManager extends ListenerAdapter {
                             },
                             (err) -> Bot.log.warn("Failed to register guild command {}: {}", data.name(), err.getMessage())
                     );
-                } else{
+                } else {
                     handlers.putIfAbsent(command.getData().name(), command);
                 }
             }
@@ -215,7 +217,7 @@ public class CommandManager extends ListenerAdapter {
 
                 dataList.add(data);
 
-            } catch (JSONException e){
+            } catch (JSONException e) {
                 Bot.log.error("Unknown JSONException registering command: {}\n{}", e.getMessage(), Arrays.toString(e.getStackTrace()));
             }
         }
@@ -314,9 +316,9 @@ public class CommandManager extends ListenerAdapter {
 
         JSONArray options;
 
-        try{
+        try {
             options = obj.getJSONArray("options");
-        } catch (JSONException e){
+        } catch (JSONException e) {
             return null;
         }
 
@@ -394,7 +396,7 @@ public class CommandManager extends ListenerAdapter {
             String name = choice.getString("name");
             Object val = choice.get("val");
 
-            switch (dat.getType()){
+            switch (dat.getType()) {
                 case INTEGER -> dat.addChoice(name, (int) val);
                 case NUMBER -> dat.addChoice(name, (double) val);
                 case STRING -> dat.addChoice(name, (String) val);
@@ -408,17 +410,17 @@ public class CommandManager extends ListenerAdapter {
 
         JSONArray permissions = obj.optJSONArray("permissions");
 
-        if(permissions == null){
+        if (permissions == null) {
             return null;
         }
 
         Permission[] perms = new Permission[permissions.length()];
 
         for (int i = 0; i < permissions.length(); i++) {
-            try{
+            try {
                 Permission p = Permission.getFromOffset(permissions.getInt(i));
                 perms[i] = p;
-            } catch (JSONException e){
+            } catch (JSONException e) {
                 Bot.log.error("Unknown JSONException getting permissions: {}\n{}", e.getMessage(), Arrays.toString(e.getStackTrace()));
             }
         }
@@ -430,11 +432,11 @@ public class CommandManager extends ListenerAdapter {
     private String getGuildId(@NotNull JSONObject obj) {
         Objects.requireNonNull(obj);
 
-        try{
+        try {
             JSONObject guildInfo = obj.getJSONObject("guildInfo");
 
             return guildInfo.getString("id");
-        } catch (JSONException e){
+        } catch (JSONException e) {
             return null;
         }
     }
@@ -444,22 +446,22 @@ public class CommandManager extends ListenerAdapter {
         Objects.requireNonNull(obj);
 
         String classpath;
-        
-        try{
+
+        try {
             classpath = obj.getString("backendClass");
-        } catch (JSONException e){
+        } catch (JSONException e) {
             return null;
         }
 
         //if the json specifies a different path, return null
-        if(!classpath.startsWith("ro.srth.lbv2.command.slash")){
+        if (!classpath.startsWith("ro.srth.lbv2.command.slash")) {
             throw new InvalidCommandClassException(classpath, "Improper classpath, must be child of slash package.");
         }
-        
+
         Class<?> clazz = Class.forName(classpath);
-        
+
         //if the class does not extend LBCommand, return null
-        if(!clazz.getSuperclass().equals(LBCommand.class)){
+        if (!clazz.getSuperclass().equals(LBCommand.class)) {
             throw new InvalidCommandClassException(classpath, "Class does not extend LBCommand");
         }
 
@@ -493,7 +495,7 @@ public class CommandManager extends ListenerAdapter {
 
         File[] files = CMDPATH.listFiles();
 
-        if(files == null) {
+        if (files == null) {
             throw new FileNotFoundException("listFiles returned null");
         }
 
@@ -501,7 +503,7 @@ public class CommandManager extends ListenerAdapter {
 
         for (File file : files) {
             String fileName = file.getName();
-            if (fileName.trim().substring(fileName.lastIndexOf('.')+1).equalsIgnoreCase("json")){
+            if (fileName.trim().substring(fileName.lastIndexOf('.') + 1).equalsIgnoreCase("json")) {
                 jsons.add(file);
             }
         }
@@ -513,13 +515,13 @@ public class CommandManager extends ListenerAdapter {
     private File jsonFromName(String name) {
         boolean b = doesCmdPathExist();
 
-        if(!b){
+        if (!b) {
             return null;
         }
 
         File json = new File(CMDPATH, name + ".json");
 
-        if(!json.exists()){
+        if (!json.exists()) {
             return null;
         } else {
             return json;
@@ -536,11 +538,11 @@ public class CommandManager extends ListenerAdapter {
     }
 
     private boolean doesCmdPathExist() {
-        if(!CMDPATH.exists()){
+        if (!CMDPATH.exists()) {
             Bot.log.warn("cmds folder does not exist, creating new folder...");
             boolean suc = CMDPATH.mkdir();
 
-            if(!suc){
+            if (!suc) {
                 Bot.log.warn("cmds folder creation unsuccessful");
             }
             return false;

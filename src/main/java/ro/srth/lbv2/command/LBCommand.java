@@ -42,7 +42,7 @@ public abstract class LBCommand {
             }
 
             if(event.getName().equals(this.data.name)){
-                Bot.log.info(event.getUser().getEffectiveName() + " ran command " + this.data.name);
+                Bot.log.info("{} ran command {}", event.getUser().getEffectiveName(), this.data.name);
                 runSlashCommand(event);
             }
         } catch (Exception e){

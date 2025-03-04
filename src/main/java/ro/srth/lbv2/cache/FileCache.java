@@ -22,6 +22,7 @@ public final class FileCache implements LBCache<String, File> {
             .initialCapacity(10)
             .evictionListener(((key, value, cause) -> {
                 if (value != null) {
+                    //noinspection ResultOfMethodCallIgnored
                     ((File) value).delete();
                 }
             }))

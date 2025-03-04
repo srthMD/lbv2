@@ -52,9 +52,7 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
         val hours = event.getOption("hours")?.asLong ?: 1
 
         val question = questions!![rand.nextInt(questions.size)]
-        val mode = question[0]
-
-        val action = when (mode) {
+        val action = when (val mode = question[0]) {
             "MC" -> multipleChoiceBuilder(question)
 
             "TF" -> trueFalseBuilder(question)
@@ -64,7 +62,6 @@ class RandomQuestionCommand(data: Data) : LBCommand(data) {
                 throw UnsupportedOperationException(mode + "is not supported.")
             }
         }
-
 
         action.setDuration(Duration.ofHours(hours))
 
