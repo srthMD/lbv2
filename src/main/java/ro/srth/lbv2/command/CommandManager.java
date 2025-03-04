@@ -325,7 +325,7 @@ public class CommandManager extends ListenerAdapter {
         for (int i = 0; i < options.length(); i++) {
             JSONObject option = options.getJSONObject(i);
 
-            try{
+            try {
                 String name = option.getString("name");
                 String description = option.getString("description");
                 boolean required = option.getBoolean("required");
@@ -355,31 +355,33 @@ public class CommandManager extends ListenerAdapter {
 
     //extracted
     private void setRanges(JSONObject range, OptionData dat) {
-        if(range != null){
-            switch (dat.getType()){
-                case INTEGER, NUMBER -> {
-                    long min = range.optInt("minInt", -1);
-                    long max = range.optInt("maxInt", -1);
+        if (range == null) {
+            return;
+        }
 
-                    if(min != -1){
-                        dat.setMinValue(min);
-                    }
+        switch (dat.getType()) {
+            case INTEGER, NUMBER -> {
+                long min = range.optInt("minInt", -1);
+                long max = range.optInt("maxInt", -1);
 
-                    if(max != -1){
-                        dat.setMaxValue(max);
-                    }
+                if (min != -1) {
+                    dat.setMinValue(min);
                 }
-                case STRING -> {
-                    int min = range.optInt("minLength", -1);
-                    int max = range.optInt("maxLength", -1);
 
-                    if(min != -1){
-                        dat.setMinLength(min);
-                    }
+                if (max != -1) {
+                    dat.setMaxValue(max);
+                }
+            }
+            case STRING -> {
+                int min = range.optInt("minLength", -1);
+                int max = range.optInt("maxLength", -1);
 
-                    if(max != -1){
-                        dat.setMaxLength(max);
-                    }
+                if (min != -1) {
+                    dat.setMinLength(min);
+                }
+
+                if (max != -1) {
+                    dat.setMaxLength(max);
                 }
             }
         }
@@ -545,7 +547,6 @@ public class CommandManager extends ListenerAdapter {
         }
         return true;
     }
-
 
     public ExecutorService getExecutor() {
         return exec;

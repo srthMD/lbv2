@@ -15,7 +15,6 @@ import java.awt.image.BufferedImage
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-
 @Suppress("unused")
 class AsciifyCommand(data: Data) : LBCommand(data) {
     private val charSet: String

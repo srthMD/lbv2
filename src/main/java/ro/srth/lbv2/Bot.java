@@ -83,16 +83,16 @@ public final class Bot {
         return token;
     }
 
-    public static Bot getInstance() {
-        return instance;
-    }
-
     public void shutdown() {
         this.shutdown = true;
         inputHandler.shutdown();
         commandManager.getExecutor().shutdown();
         fileCache.flush();
         bot.shutdown();
+    }
+
+    public static Bot getInstance() {
+        return instance;
     }
 
     public JDA getBot() {
