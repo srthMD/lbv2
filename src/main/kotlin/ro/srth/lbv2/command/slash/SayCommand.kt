@@ -6,6 +6,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping
 import net.dv8tion.jda.api.utils.FileUpload
 import ro.srth.lbv2.Bot
 import ro.srth.lbv2.command.LBCommand
+import java.io.InputStream
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 @Suppress("unused")
 class SayCommand(data: Data) : LBCommand(data) {
@@ -15,12 +18,20 @@ class SayCommand(data: Data) : LBCommand(data) {
 
         val interaction = event.channel.sendMessage(str)
 
-        val reply = if (attachment == null) "Sending message..." else "Downloading attachment..."
-        event.reply(reply).setEphemeral(true).queue()
+        if (attachment != null) {
+            event.reply("Downloading attachment...").setEphemeral(true).queue()
 
-        attachment?.proxy?.download()?.get()?.use { download ->
-            val rand = bot.rand().nextLong()
-            interaction.addFiles(FileUpload.fromData(download, "attachment${rand}.${attachment.fileExtension}"))
+            val file: InputStream
+            try {
+                file = attachment.proxy.download().get(5, TimeUnit.SECONDS);
+            } catch (e: TimeoutException) {
+                event.hook.editOriginal("Timed out while downloading attachment.").queue()
+                return
+            }
+
+            interaction.addFiles(FileUpload.fromData(file, attachment.fileName))
+        } else {
+            event.reply("Sending message...").setEphemeral(true).queue()
         }
 
         @Suppress("InconsistentCommentForJavaParameter")

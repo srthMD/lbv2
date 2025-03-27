@@ -23,7 +23,7 @@ class PermissionCommand(data: Data) : LBCommand(data) {
             return
         }
 
-        val data = command.data
+        val data = command.data;
         val perms = data.permissions
 
         val embed = EmbedBuilder()

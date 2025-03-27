@@ -8,21 +8,19 @@ import java.io.File;
 import java.time.Duration;
 
 /**
- * Basic class holding a cache that stores references to files.
- * The hashes are supposed to be generated using the file's name and size.
+ * Basic class holding a cache that stores references to files. The hashes are
+ * supposed to be generated using the file's name and size.
  */
 public final class FileCache implements LBCache<String, File> {
     private final Cache<String, File> fileCache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofMinutes(1))
             .expireAfterAccess(Duration.ofSeconds(45))
             .maximumWeight(102400)
-            .weigher(((key, value) ->
-                    ((int) ((File) value).length()) / 1024)
-            )
+            .weigher(((key, value) -> ((int) ((File) value).length()) / 1024))
             .initialCapacity(10)
             .evictionListener(((key, value, cause) -> {
                 if (value != null) {
-                    //noinspection ResultOfMethodCallIgnored
+                    // noinspection ResultOfMethodCallIgnored
                     ((File) value).delete();
                 }
             }))
