@@ -3,10 +3,20 @@ package ro.srth.lbv2;
 import org.junit.jupiter.api.Test;
 import ro.srth.lbv2.util.FastFlags;
 
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FastFlagTests {
-    private final FastFlags flags = new FastFlags();
+    private final FastFlags flags;
+
+    {
+        try {
+            flags = new FastFlags();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Test
     void intTest() {

@@ -15,22 +15,21 @@ import ro.srth.lbv2.util.FastFlags;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
 public final class Bot {
     private static Bot instance;
-    public static final Logger log = LoggerFactory.getLogger(Bot.class);
 
+    public static final Logger log = LoggerFactory.getLogger(Bot.class);
     private final JDA bot;
     private final CommandManager commandManager;
-
     private final Random rand = new Random(System.currentTimeMillis());
     private final OkHttpClient client = new OkHttpClient();
-    private final FastFlags fastFlags = new FastFlags();
     private final FileCache fileCache = new FileCache();
-
     private final InputHandler inputHandler;
+    private FastFlags fastFlags;
 
     private boolean shutdown = false;
 
@@ -57,6 +56,12 @@ public final class Bot {
 
         this.inputHandler = new InputHandler();
         this.commandManager = new CommandManager();
+
+        try {
+            this.fastFlags = new FastFlags();
+        } catch (IOException e) {
+            Bot.log.error("Could not load fast flags: {}", e.getMessage());
+        }
     }
 
     public static void main(String[] args) throws InterruptedException {

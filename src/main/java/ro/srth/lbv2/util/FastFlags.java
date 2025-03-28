@@ -5,6 +5,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,11 +16,11 @@ public class FastFlags {
 
     private final Map<String, Object> keys = new HashMap<>();
 
-    public FastFlags() {
+    public FastFlags() throws IOException {
         final File jsonFile = new File("flags.json");
 
         if (!jsonFile.exists()) {
-            throw new RuntimeException("flags.json file does not exist");
+            throw new FileNotFoundException("flags.json file does not exist");
         }
 
         try (var reader = new FileInputStream(jsonFile)) {
@@ -29,7 +30,7 @@ public class FastFlags {
 
             this.keys.putAll(keys);
         } catch (IOException e) {
-            throw new RuntimeException("error reading flags.json", e);
+            throw new IOException("error reading flags.json", e);
         }
     }
 
