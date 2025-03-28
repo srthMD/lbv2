@@ -10,6 +10,8 @@ import java.io.InputStream
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
+//فكرة إنتلييج
+
 @Suppress("unused")
 class SayCommand(data: Data) : LBCommand(data) {
     override fun runSlashCommand(event: SlashCommandInteractionEvent) {
