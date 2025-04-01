@@ -11,11 +11,9 @@ import org.slf4j.LoggerFactory;
 import ro.srth.lbv2.cache.FileCache;
 import ro.srth.lbv2.command.CommandManager;
 import ro.srth.lbv2.input.InputHandler;
-import ro.srth.lbv2.util.FastFlags;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -29,9 +27,6 @@ public final class Bot {
     private final OkHttpClient client = new OkHttpClient();
     private final FileCache fileCache = new FileCache();
     private final InputHandler inputHandler;
-    private FastFlags fastFlags;
-
-    private boolean shutdown = false;
 
     public Bot() throws InterruptedException {
         String token;
@@ -56,12 +51,6 @@ public final class Bot {
 
         this.inputHandler = new InputHandler();
         this.commandManager = new CommandManager();
-
-        try {
-            this.fastFlags = new FastFlags();
-        } catch (IOException e) {
-            Bot.log.error("Could not load fast flags: {}", e.getMessage());
-        }
     }
 
     public static void main(String[] args) throws InterruptedException {
@@ -89,7 +78,6 @@ public final class Bot {
     }
 
     public void shutdown() {
-        this.shutdown = true;
         inputHandler.shutdown();
         commandManager.getExecutor().shutdown();
         fileCache.flush();
@@ -118,13 +106,5 @@ public final class Bot {
 
     public OkHttpClient getClient() {
         return client;
-    }
-
-    public boolean isShutdown() {
-        return shutdown;
-    }
-
-    public FastFlags getFastFlags() {
-        return fastFlags;
     }
 }
